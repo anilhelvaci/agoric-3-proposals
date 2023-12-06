@@ -1,0 +1,122 @@
+{
+  "bundleFileName": "bundle-assetsFaucet.json",
+  "bundleTime": "2023-12-04T09:21:55.049Z",
+  "moduleSource": {
+    "relative": "../../assetsFaucet/src/assetsFaucet.js",
+    "absolute": "/Users/anil/WebstormProjects/agoric-samples/crabbleProtocol/source_code/assetsFaucet/src/assetsFaucet.js"
+  },
+  "contents": [
+    {
+      "relativePath": "",
+      "mtime": "2023-12-04T07:39:35.034Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/far/src/index.js",
+      "mtime": "2023-11-07T14:22:41.230Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/eventual-send/src/no-shim.js",
+      "mtime": "2023-11-07T14:22:39.358Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/index.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/eventual-send/src/E.js",
+      "mtime": "2023-11-07T14:22:39.358Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/eventual-send/src/exports.js",
+      "mtime": "2023-11-07T14:22:39.358Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/error.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/iter-helpers.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/make-far.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/makeTagged.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/passStyle-helpers.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/passStyleOf.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/remotable.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/symbol.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/typeGuards.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/types.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/eventual-send/src/track-turns.js",
+      "mtime": "2023-11-07T14:22:39.358Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/copyArray.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/copyRecord.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/safe-promise.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/pass-style/src/tagged.js",
+      "mtime": "2023-11-07T14:22:43.840Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/promise-kit/index.js",
+      "mtime": "2023-11-07T14:22:40.138Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/env-options/index.js",
+      "mtime": "2023-11-07T14:22:43.206Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/promise-kit/src/is-promise.js",
+      "mtime": "2023-11-07T14:22:40.138Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/promise-kit/src/memo-race.js",
+      "mtime": "2023-11-07T14:22:40.138Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/promise-kit/src/promise-executor-kit.js",
+      "mtime": "2023-11-07T14:22:40.138Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/promise-kit/src/types.js",
+      "mtime": "2023-11-07T14:22:40.138Z"
+    },
+    {
+      "relativePath": "../../../node_modules/@endo/env-options/src/env-options.js",
+      "mtime": "2023-11-07T14:22:43.206Z"
+    }
+  ]
+}

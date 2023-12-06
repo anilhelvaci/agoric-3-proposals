@@ -1,0 +1,15 @@
+{
+  "consume": {
+    "board": true,
+    "chainStorage": true,
+    "chainTimerService": "timer",
+    "zoe": true,
+    "agoricNamesAdmin": true,
+    "agoricNames": true,
+    "namesByAddressAdmin": true,
+    "contractKits": true,
+    "governedContractKits": true,
+    "diagnostics": true,
+    "instancePrivateArgs": true
+  }
+}

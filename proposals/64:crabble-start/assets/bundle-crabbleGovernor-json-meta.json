@@ -1,0 +1,498 @@
+{
+  "bundleFileName": "bundle-crabbleGovernor.json",
+  "bundleTime": "2023-12-04T09:21:53.975Z",
+  "moduleSource": {
+    "relative": "../../contract/src/crabbleGovernor.js",
+    "absolute": "/Users/anil/WebstormProjects/agoric-samples/crabbleProtocol/source_code/contract/src/crabbleGovernor.js"
+  },
+  "contents": [
+    {
+      "relativePath": "",
+      "mtime": "2023-12-04T07:39:35.035Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/governance/src/contractGovernance/governParam.js",
+      "mtime": "2023-09-29T12:47:53.874Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/governance/src/contractGovernorKit.js",
+      "mtime": "2023-09-29T12:48:23.824Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/index.js",
+      "mtime": "2023-09-29T12:47:53.895Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/time/index.js",
+      "mtime": "2023-09-29T12:47:53.942Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/vat-data/src/index.js",
+      "mtime": "2023-09-29T12:48:23.873Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/zoe/src/contractSupport/durability.js",
+      "mtime": "2023-09-29T12:48:23.894Z"
+    },
+    {
+      "relativePath": "../../node_modules/@endo/eventual-send/src/no-shim.js",
+      "mtime": "2023-11-07T14:22:46.391Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/governance/src/question.js",
+      "mtime": "2023-09-29T12:47:53.875Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/governance/src/typeGuards.js",
+      "mtime": "2023-09-29T12:47:53.875Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/index.js",
+      "mtime": "2023-09-29T12:48:23.855Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/eventual-send/src/no-shim.js",
+      "mtime": "2023-09-29T07:30:46.568Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/index.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/time/src/timeMath.js",
+      "mtime": "2023-09-29T12:48:23.869Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/time/src/typeGuards.js",
+      "mtime": "2023-09-29T12:48:23.869Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/config.js",
+      "mtime": "2023-09-29T12:47:53.895Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/debug.js",
+      "mtime": "2023-09-29T12:47:53.895Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/method-tools.js",
+      "mtime": "2023-09-29T12:48:23.844Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/typeGuards.js",
+      "mtime": "2023-09-29T12:48:23.844Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/utils.js",
+      "mtime": "2023-09-29T12:47:53.897Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/governance/src/contractGovernance/governApi.js",
+      "mtime": "2023-09-29T12:47:53.874Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/governance/src/contractGovernance/governFilter.js",
+      "mtime": "2023-09-29T12:47:53.874Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/assert/src/assert.js",
+      "mtime": "2023-09-29T12:47:53.836Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/vat-data/src/exo-utils.js",
+      "mtime": "2023-09-29T12:48:23.872Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/vat-data/src/vat-data-bindings.js",
+      "mtime": "2023-09-29T12:48:23.873Z"
+    },
+    {
+      "relativePath": "../../node_modules/@endo/eventual-send/src/E.js",
+      "mtime": "2023-11-07T14:22:46.391Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/zoe/src/makeHandle.js",
+      "mtime": "2023-09-29T12:47:53.972Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/legacy/legacyMap.js",
+      "mtime": "2023-09-29T12:48:23.855Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/legacy/legacyWeakMap.js",
+      "mtime": "2023-09-29T12:48:23.855Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/stores/scalarMapStore.js",
+      "mtime": "2023-09-29T12:48:23.855Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/stores/scalarSetStore.js",
+      "mtime": "2023-09-29T12:48:23.856Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/stores/scalarWeakMapStore.js",
+      "mtime": "2023-09-29T12:48:23.856Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/stores/scalarWeakSetStore.js",
+      "mtime": "2023-09-29T12:48:23.856Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/stores/store-utils.js",
+      "mtime": "2023-09-29T12:48:23.856Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/exo/index.js",
+      "mtime": "2023-09-29T07:31:07.143Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/index.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/index.js",
+      "mtime": "2023-09-29T12:47:53.900Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/zoe/src/typeGuards.js",
+      "mtime": "2023-09-29T12:48:23.897Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/nat/src/index.js",
+      "mtime": "2023-09-29T07:30:52.810Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/deeplyFulfilled.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/encodePassable.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/encodeToCapData.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/marshal-justin.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/marshal-stringify.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/marshal.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/rankOrder.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/types.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/index.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/eventual-send/src/E.js",
+      "mtime": "2023-09-29T07:30:46.568Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/far/src/index.js",
+      "mtime": "2023-09-29T07:30:45.835Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/promise-kit/index.js",
+      "mtime": "2023-09-29T07:30:49.638Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/stream/index.js",
+      "mtime": "2023-09-29T07:30:53.746Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/jessie.js/src/main.js",
+      "mtime": "2023-09-29T11:16:36.561Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/assert/src/types.js",
+      "mtime": "2023-09-29T12:47:53.836Z"
+    },
+    {
+      "relativePath": "../../node_modules/@endo/eventual-send/src/track-turns.js",
+      "mtime": "2023-11-07T14:22:46.391Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/src/types.js",
+      "mtime": "2023-09-29T12:48:23.856Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/exo/src/exo-makers.js",
+      "mtime": "2023-09-29T07:31:07.143Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/index.js",
+      "mtime": "2023-09-29T12:47:53.776Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/asyncIterableAdaptor.js",
+      "mtime": "2023-09-29T12:47:53.900Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/notifier.js",
+      "mtime": "2023-09-29T12:47:53.900Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/publish-kit.js",
+      "mtime": "2023-09-29T12:48:23.846Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/stored-notifier.js",
+      "mtime": "2023-09-29T12:47:53.900Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/storesub.js",
+      "mtime": "2023-09-29T12:48:23.846Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/subscribe.js",
+      "mtime": "2023-09-29T12:48:23.846Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/subscriber.js",
+      "mtime": "2023-09-29T12:47:53.900Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/keys/checkKey.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/keys/compareKeys.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/keys/copyBag.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/keys/copySet.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/keys/merge-bag-operators.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/keys/merge-set-operators.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/patterns/patternMatchers.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/types.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/patterns/src/utils.js",
+      "mtime": "2023-09-29T07:30:53.579Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/marshal/src/encodeToSmallcaps.js",
+      "mtime": "2023-09-29T07:30:46.169Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/iter-helpers.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/error.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/make-far.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/makeTagged.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/passStyle-helpers.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/passStyleOf.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/remotable.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/symbol.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/typeGuards.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/types.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/eventual-send/src/track-turns.js",
+      "mtime": "2023-09-29T07:30:46.568Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/promise-kit/src/is-promise.js",
+      "mtime": "2023-09-29T07:30:49.638Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/promise-kit/src/memo-race.js",
+      "mtime": "2023-09-29T07:30:49.638Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/promise-kit/src/promise-executor-kit.js",
+      "mtime": "2023-09-29T07:30:49.638Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/promise-kit/src/types.js",
+      "mtime": "2023-09-29T07:30:49.638Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/jessie.js/src/ring0/main.js",
+      "mtime": "2023-09-29T11:16:36.561Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/jessie.js/src/ring1/main.js",
+      "mtime": "2023-09-29T11:16:36.561Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/exo/src/exo-tools.js",
+      "mtime": "2023-09-29T07:31:07.143Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/types-ambient.js",
+      "mtime": "2023-09-29T12:47:53.900Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/amountMath.js",
+      "mtime": "2023-09-29T12:48:23.780Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/issuerKit.js",
+      "mtime": "2023-09-29T12:48:23.780Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/typeGuards.js",
+      "mtime": "2023-09-29T12:48:23.781Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/lib-chainStorage.js",
+      "mtime": "2023-09-29T12:48:23.844Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/notifier/src/topic.js",
+      "mtime": "2023-09-29T12:47:53.900Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/upgrade-api.js",
+      "mtime": "2023-09-29T12:47:53.897Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/copyArray.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/copyRecord.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/safe-promise.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/@endo/pass-style/src/tagged.js",
+      "mtime": "2023-09-29T07:30:52.015Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/jessie.js/src/ring0/E.js",
+      "mtime": "2023-09-29T11:16:36.561Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/jessie.js/src/ring0/async-generate.js",
+      "mtime": "2023-09-29T11:16:36.561Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/jessie.js/src/ring0/makers.js",
+      "mtime": "2023-09-29T11:16:36.561Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/node_modules/jessie.js/src/ring1/async-tools.js",
+      "mtime": "2023-09-29T11:16:36.561Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/mathHelpers/copyBagMathHelpers.js",
+      "mtime": "2023-09-29T12:48:23.780Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/mathHelpers/copySetMathHelpers.js",
+      "mtime": "2023-09-29T12:48:23.780Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/mathHelpers/natMathHelpers.js",
+      "mtime": "2023-09-29T12:48:23.780Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/mathHelpers/setMathHelpers.js",
+      "mtime": "2023-09-29T12:47:53.776Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/displayInfo.js",
+      "mtime": "2023-09-29T12:47:53.775Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/paymentLedger.js",
+      "mtime": "2023-09-29T12:48:23.781Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/types-ambient.js",
+      "mtime": "2023-09-29T12:48:23.781Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/internal/src/callback.js",
+      "mtime": "2023-09-29T12:48:23.844Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/zone/src/index.js",
+      "mtime": "2023-09-29T12:48:23.911Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/payment.js",
+      "mtime": "2023-09-29T12:48:23.780Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/purse.js",
+      "mtime": "2023-09-29T12:47:53.776Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/store/exported.js",
+      "mtime": "2023-09-29T12:47:53.911Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/zone/src/heap.js",
+      "mtime": "2023-09-29T12:48:23.911Z"
+    },
+    {
+      "relativePath": "../../../../../agoric-11-wf/packages/ERTP/src/transientNotifier.js",
+      "mtime": "2023-09-29T12:47:53.776Z"
+    }
+  ]
+}
