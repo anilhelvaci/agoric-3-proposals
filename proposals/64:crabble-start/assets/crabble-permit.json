@@ -1,0 +1,24 @@
+{
+  "consume": {
+    "board": true,
+    "chainStorage": true,
+    "chainTimerService": true,
+    "agoricNames": true,
+    "zoe": true,
+    "namesByAddressAdmin": true,
+    "startMyGovernedUpgradable": true,
+    "startUpgradable": true
+  },
+  "installation": {
+    "consume": {
+      "committee": true
+    }
+  },
+  "instance": {
+    "produce": {
+      "Crabble": true,
+      "CrabbleCommittee": true,
+      "CrabbleGovernor": true
+    }
+  }
+}

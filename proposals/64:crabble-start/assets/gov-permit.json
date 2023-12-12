@@ -1,0 +1,11 @@
+{
+  "consume": {
+    "chainTimerService": true,
+    "governedContractKits": true,
+    "diagnostics": true,
+    "zoe": true
+  },
+  "produce": {
+    "startMyGovernedUpgradable": true
+  }
+}

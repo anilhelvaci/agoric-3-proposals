@@ -57,10 +57,13 @@ const assetInfo = {
   /** @type {Record<string, ProposalInfo>} */
   buildAssets: {
     crabbleCoreEvalInfo: {
-      evals: [{ permit: 'proposal-permit.json', script: 'core-eval.js' }],
+      evals: [
+          { permit: 'crabble-permit.json', script: 'crabbleCoreEval.js' },
+          { permit: 'gov-permit.json', script: 'govStarting.js' },
+      ],
       bundles: [
-        'bundle-crabble.json',
-        'bundle-crabbleGovernor.json',
+        'bundle-contract.json',
+        'bundle-governor.json',
       ],
     },
   },
@@ -81,19 +84,19 @@ const staticConfig = {
   initialCoins: `20000000ubld`, // enough to provision a smartWallet
   accounts: {
     mem1: {
-      impersonate: 'agoric1kupk4yyvnl3h80j753705nfm2nfxff5vktvd3z',
+      impersonate: 'agoric1ag5a8lhn00h4u9h2shpfpjpaq6v4kku54zk69m',
       address: 'agoric1s32tu4wtkqc5440p0uf0hk508nerfmunr65vtl',
       mnemonic:
         'rival find chest wall myself guess fat hint frozen shed cake theme harbor physical bleak tube large desk cream increase scrap virus top bulb',
     },
     mem2: {
-      impersonate: 'agoric10xh9n8qzjsxg9k5txdmvtj5kfr3092j8mptr7g',
+      impersonate: 'agoric140y0mqnq7ng5vvxxwpfe67988e5vqar9whg309',
       address: 'agoric1xdu48rxgakk5us7m3wud04pf92kzjmhwllzdef',
       mnemonic:
         'orient tag produce jar expect travel consider zero flight pause rebuild rent blanket yellow siege ivory hidden loop unlock dream priority prevent horn load',
     },
     mem3: {
-      impersonate: 'agoric1890064p6j3xhzzdf8daknd6kpvhw766ds8flgw',
+      impersonate: 'agoric1wqfu6hu5q2qtey9jtjapaae4df9zd492z4448k',
       address: 'agoric1hmdue96vs0p6zj42aa26x6zrqlythpxnvgsgpr',
       mnemonic:
         'seven regular giggle castle universe find secret like inquiry round write pumpkin risk exhaust dress grab host message carbon student put kind gold treat',
@@ -164,17 +167,17 @@ const makeTestContext = async (io = {}) => {
 
 test.before(async t => (t.context = await makeTestContext()));
 
-test('initial', async t => {
-  const { src } = t.context;
-  const assetFaucet = src.join('bundle-assetsFaucet.json');
-  const stat = assetFaucet.stat();
-  const path = assetFaucet.toString();
-  console.log({
-    stat,
-    path,
-  });
-  t.pass();
-});
+// test('initial', async t => {
+//   const { src } = t.context;
+//   const assetFaucet = src.join('bundle-assetsFaucet.json');
+//   const stat = assetFaucet.stat();
+//   const path = assetFaucet.toString();
+//   console.log({
+//     stat,
+//     path,
+//   });
+//   t.pass();
+// });
 
 test.serial(`pre-flight: not in agoricNames.instance`, async t => {
   const { config, agoric } = t.context;
@@ -361,6 +364,7 @@ test.serial('core eval proposal passes', async t => {
     ],
     { from, chainId, yes: true },
   );
+  console.log('RESULT', { result })
   t.log(txAbbr(result));
   t.is(result.code, 0);
 
