@@ -130,8 +130,8 @@ const startCommittee = async (
  * }>} committeeInfoP
  */
 const startCrabble = async (powers, config, crabbleNode, committeeInfoP) => {
-  const contractBundleID = "b1-145f84363c784c96bc5a5d456edf1853bf2bb04388a250f010a53234b333af46d8d08e3c58d6e3bac61c45b18e82a09199938466616016a22d9191448f8e505c";
-  const governorBundleID = "b1-d67b9ac5100bf45a3369d393fe2cb38e0718f770cac936292a18270ed331865ffa817719f5c6ceacdb1a580572d71084db0545e8e13efaee38c7df76f51f756c";
+  const contractBundleID = "b1-3af8183538129ce433d368dc0bdb6082733fc0fa6449c18d5f212f104f971d8ea8b033074067b807bffd5eb2f17821c5e2e9b26ba312795368ae8e7446606b85";
+  const governorBundleID = "b1-0bfb8a189cda652bc43c488e079e6362870e49039a247156f9430f4f0dfa054970f01c108b79c476baddc8b814546ad88578358452fe2919d11fdcc224bbe4b3";
 
   const {
     consume: {
