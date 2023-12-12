@@ -6,6 +6,6 @@
     "zoe": true
   },
   "produce": {
-    "startMyGovernedUpgradable": true
+    "startCrabbleGovernedUpgradable": true
   }
 }

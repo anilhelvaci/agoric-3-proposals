@@ -16,7 +16,7 @@ const ParamTypes = /** @type {const} */ ({
 const { fromEntries, entries } = Object;
 
 /** @type { <T extends Record<string, ERef<any>>>(obj: T) => Promise<{ [K in keyof T]: Awaited<T[K]>}> } */
-const allValues = async obj => {
+const allValues = async (obj) => {
   const es = await Promise.all(
     entries(obj).map(async ([k, v]) => [k, await v]),
   );
@@ -59,7 +59,7 @@ const logger = (message) => {
  * }} govArgs
  * @returns {Promise<GovernanceFacetKit<SF>>}
  */
-const startMyGovernedInstance = async (
+const startCrabbleGovernedInstance = async (
   {
     zoe,
     governedContractInstallation,
@@ -147,13 +147,13 @@ const startMyGovernedInstance = async (
 /**
  * @param {BootstrapSpace & {
  *   produce: {
- *     startMyGovernedUpgradable: Producer<Function>;
+ *     startCrabbleGovernedUpgradable: Producer<Function>;
  *   };
  * }} powers
  */
-const produceStartMyGovernedUpgradable = async ({
+const produceStartCrabbleGovernedUpgradable = async ({
   consume: { chainTimerService, governedContractKits, diagnostics, zoe },
-  produce, // startMyGovernedUpgradable
+  produce, // startCrabbleGovernedUpgradable
 }) => {
   logger('Producing governed upgradable...');
   /**
@@ -176,8 +176,8 @@ const produceStartMyGovernedUpgradable = async ({
     label,
   }) => {
     const contractKits = await governedContractKits;
-    logger('Init startMyGovernedInstance...');
-    const facets = await startMyGovernedInstance(
+    logger('Init startCrabbleGovernedInstance...');
+    const facets = await startCrabbleGovernedInstance(
       {
         zoe,
         governedContractInstallation: installation,
@@ -207,10 +207,12 @@ const produceStartMyGovernedUpgradable = async ({
     return facets;
   };
 
-  produce.startMyGovernedUpgradable.resolve(harden(startGovernedUpgradable));
+  produce.startCrabbleGovernedUpgradable.resolve(
+    harden(startGovernedUpgradable),
+  );
   logger('Done.');
 };
-harden(produceStartMyGovernedUpgradable);
+harden(produceStartCrabbleGovernedUpgradable);
 
 // script completion value
-produceStartMyGovernedUpgradable;
+produceStartCrabbleGovernedUpgradable;

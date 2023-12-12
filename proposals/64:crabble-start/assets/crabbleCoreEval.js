@@ -56,7 +56,9 @@ const startCommittee = async (
       namesByAddressAdmin,
       startUpgradable,
     },
-    installation: { consume: { committee: committeeInstallationP } },
+    installation: {
+      consume: { committee: committeeInstallationP },
+    },
     instance: { produce: produceInstance },
   },
   config,
@@ -114,7 +116,7 @@ const startCommittee = async (
  *   consume: {
  *     zoe: Promise<ZoeService>;
  *     board: ERef<XMPORT('@agoric/vats').Board>,
- *     startMyGovernedUpgradable: Promise<Function>,
+ *     startCrabbleGovernedUpgradable: Promise<Function>,
  *     chainTimerService: ERef<XMPORT('@agoric/time/src/types').TimerService>;
  *     agoricNames: ERef<XMPORT('@agoric/vats').NameHub>;
  *   },
@@ -128,15 +130,13 @@ const startCommittee = async (
  * }>} committeeInfoP
  */
 const startCrabble = async (powers, config, crabbleNode, committeeInfoP) => {
-  // eslint-disable-next-line
-  const contractBundleID = "b1-46f82a8b8348f7c2dcae1ddc1ace085f5f489d493f7df24ce8f2334199b21eeb9ed848de5e2814f200ba47470ff3bd83b08d74055da2a454f94c2a0c565bf557";
-  // eslint-disable-next-line
-  const governorBundleID = "b1-bde789b8f6623f2352dc2d4a781f39066bbb63366602ac3c70943760418a9c7e63b8d9cfad6c8601e418ec5dfd29f1b62b2419bd2cd7f5907f59a62aff37e332";
+  const contractBundleID = "b1-145f84363c784c96bc5a5d456edf1853bf2bb04388a250f010a53234b333af46d8d08e3c58d6e3bac61c45b18e82a09199938466616016a22d9191448f8e505c";
+  const governorBundleID = "b1-d67b9ac5100bf45a3369d393fe2cb38e0718f770cac936292a18270ed331865ffa817719f5c6ceacdb1a580572d71084db0545e8e13efaee38c7df76f51f756c";
 
   const {
     consume: {
       board,
-      startMyGovernedUpgradable,
+      startCrabbleGovernedUpgradable,
       zoe: zoeI, // only used for installation, not for startInstance
       chainTimerService,
       agoricNames: agoricNamesP,
@@ -203,7 +203,7 @@ const startCrabble = async (powers, config, crabbleNode, committeeInfoP) => {
   });
 
   logger('Starting governor, governed...');
-  const kit = await E(startMyGovernedUpgradable)({
+  const kit = await E(startCrabbleGovernedUpgradable)({
     installation: contractInstallation,
     committeeCreatorFacet,
     contractGovernor: governorInstallation,

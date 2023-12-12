@@ -6,7 +6,7 @@
     "agoricNames": true,
     "zoe": true,
     "namesByAddressAdmin": true,
-    "startMyGovernedUpgradable": true,
+    "startCrabbleGovernedUpgradable": true,
     "startUpgradable": true
   },
   "installation": {
