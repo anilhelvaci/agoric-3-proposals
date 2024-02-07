@@ -137,6 +137,24 @@ To get the local files into the container, use a [bind mount](https://docs.docke
 docker run -it --entrypoint bash --mount type=bind,src=.,dst=/usr/src/a3p ghcr.io/agoric/agoric-3-proposals:use-upgrade-8
 ```
 
+### Common errors
+
+#### Consensus failure
+
+This one reports as failure, but it's actually the mechanism for triggering a chain-halting upgrade:
+
+```
+CONSENSUS FAILURE!!! err="UPGRADE \"agoric-upgrade-8\" NEEDED at height: 33: {}" module=consensus
+```
+
+But this one is a problem:
+
+```
+ERR CONSENSUS FAILURE!!! err="runtime error: invalid memory address or nil pointer dereference" module=consensus
+```
+
+The most likely cause is a problem voting in the the proposal to upgrade.
+
 # Contributing
 
 To add a proposal, see [CONTRIBUTING.md](./CONTRIBUTING.md).
