@@ -20,6 +20,7 @@ import {
   readProposals,
 } from './src/cli/proposals.js';
 import { debugTestImage, runTestImage } from './src/cli/run.js';
+import assert from 'node:assert';
 
 const { positionals, values } = parseArgs({
   options: {
@@ -101,7 +102,8 @@ switch (cmd) {
     prepareDockerBuild();
 
     if (values.debug) {
-      const proposal = matchOneProposal(proposals, match!);
+      assert(match, '--debug requires -m');
+      const proposal = matchOneProposal(proposals, match);
       console.log(chalk.yellow.bold(`Debugging ${proposal.proposalName}`));
       bakeTarget(imageNameForProposal(proposal, 'test').target, values.dry);
       debugTestImage(proposal);
