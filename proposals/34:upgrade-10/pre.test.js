@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { promises as fs } from 'fs';
+import fsp from 'node:fs/promises';
 
 import {
   agd,
@@ -116,7 +116,7 @@ test('PSM gov params were preserved', async t => {
     `:published.psm.${PSM_PAIR}.governance`,
   );
 
-  const psmGovernanceData = await fs.readFile(
+  const psmGovernanceData = await fsp.readFile(
     '/root/.agoric/psm_governance.json',
     'binary',
   );
@@ -146,7 +146,7 @@ test('PSM metric params were preserved', async t => {
     `:published.psm.${PSM_PAIR}.metrics`,
   );
 
-  const psmMetricsData = await fs.readFile(
+  const psmMetricsData = await fsp.readFile(
     '/root/.agoric/psm_metrics.json',
     'binary',
   );
@@ -168,15 +168,16 @@ test('PSM metric params were preserved', async t => {
   );
 });
 
+// upgrade-8 wrote the JSON file
 test('Provision pool metrics are retained across vaults upgrade', async t => {
   const provisionPoolMetrics = await agoric.follow(
     '-lF',
     ':published.provisionPool.metrics',
   );
 
-  const provisionPoolMetricsData = await fs.readFile(
+  const provisionPoolMetricsData = await fsp.readFile(
     '/root/.agoric/provision_pool_metrics.json',
-    'binary',
+    'utf8',
   );
 
   const testProvisionPoolMetrics = JSON.parse(provisionPoolMetricsData);

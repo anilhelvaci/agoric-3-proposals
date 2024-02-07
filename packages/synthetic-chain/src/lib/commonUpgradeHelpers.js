@@ -1,7 +1,6 @@
-// @ts-expect-error XXX execa typedef
 import { $ } from 'execa';
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import fsp from 'node:fs/promises';
+import * as path from 'node:path';
 import { agd, agoric, agops } from './cliHelper.js';
 import { CHAINID, HOME, VALIDATORADDR } from './constants.js';
 
@@ -121,7 +120,7 @@ export const calculateWalletState = async addr => {
 export const executeOffer = async (address, offerPromise) => {
   const offerPath = await mkTemp('agops.XXX');
   const offer = await offerPromise;
-  await fs.writeFile(offerPath, offer);
+  await fsp.writeFile(offerPath, offer);
 
   await agops.perf(
     'satisfaction',
@@ -139,7 +138,7 @@ export const getUser = async user => {
 
 export const addUser = async user => {
   const userKeyData = await agd.keys('add', user, '--keyring-backend=test');
-  await fs.writeFile(`${HOME}/.agoric/${user}.key`, userKeyData.mnemonic);
+  await fsp.writeFile(`${HOME}/.agoric/${user}.key`, userKeyData.mnemonic);
 
   const userAddress = await getUser(user);
   return userAddress;

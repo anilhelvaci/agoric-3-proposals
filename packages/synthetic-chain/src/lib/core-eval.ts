@@ -1,12 +1,12 @@
-import { execFileSync } from 'child_process'; // TODO: use execa
-import * as fsp from 'fs/promises';
-import * as path from 'path';
-import * as process from 'process';
+import { execFileSync } from 'node:child_process'; // TODO: use execa
+import * as fsp from 'node:fs/promises';
+import * as path from 'node:path';
+import * as process from 'node:process';
 
 import { ZipReader } from '@endo/zip';
 import dbOpen from 'better-sqlite3';
 
-import assert from 'assert';
+import assert from 'node:assert';
 import { makeAgd } from '@agoric/synthetic-chain/src/lib/agd-lib.js';
 import { agoric } from '@agoric/synthetic-chain/src/lib/cliHelper.js';
 import { voteLatestProposalAndWait } from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';

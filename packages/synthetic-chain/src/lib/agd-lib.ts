@@ -1,6 +1,5 @@
-import { ExecFileSyncOptionsWithStringEncoding } from 'child_process';
-
 import assert from 'node:assert';
+import { ExecFileSyncOptionsWithStringEncoding } from 'node:child_process';
 
 const { freeze } = Object;
 
