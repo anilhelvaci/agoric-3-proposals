@@ -7,6 +7,7 @@ import {
 test('imageNameForProposal', t => {
   const proposal: ProposalInfo = {
     type: '/agoric.swingset.CoreEvalProposal',
+    path: '1:foo',
     proposalName: 'foo',
     proposalIdentifier: 'z',
     source: 'build',

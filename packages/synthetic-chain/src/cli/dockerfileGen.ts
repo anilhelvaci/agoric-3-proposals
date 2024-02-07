@@ -218,6 +218,7 @@ export function writeDockerfile(
       proposalName: fromTag,
       proposalIdentifier: fromTag,
       // XXX these are bogus
+      path: 'VIRTUAL',
       type: '/agoric.swingset.CoreEvalProposal',
       source: 'subdir',
     };

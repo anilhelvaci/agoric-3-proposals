@@ -1,9 +1,10 @@
 #!/usr/bin/env tsx
 
+import chalk from 'chalk';
+import assert from 'node:assert';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import chalk from 'chalk';
 import {
   bakeTarget,
   buildProposalSubmissions,
@@ -14,13 +15,8 @@ import {
   writeDockerfile,
 } from './src/cli/dockerfileGen.js';
 import { runDoctor } from './src/cli/doctor.js';
-import {
-  imageNameForProposal,
-  matchOneProposal,
-  readProposals,
-} from './src/cli/proposals.js';
+import { imageNameForProposal, readProposals } from './src/cli/proposals.js';
 import { debugTestImage, runTestImage } from './src/cli/run.js';
-import assert from 'node:assert';
 
 const { positionals, values } = parseArgs({
   options: {
@@ -37,7 +33,7 @@ const allProposals = readProposals(root);
 
 const { match } = values;
 const proposals = match
-  ? allProposals.filter(p => p.proposalName.includes(match))
+  ? allProposals.filter(p => p.path.includes(match))
   : allProposals;
 
 const [cmd] = positionals;
@@ -103,7 +99,9 @@ switch (cmd) {
 
     if (values.debug) {
       assert(match, '--debug requires -m');
-      const proposal = matchOneProposal(proposals, match);
+      assert(proposals.length > 0, 'no proposals match');
+      assert(proposals.length === 1, 'too many proposals match');
+      const proposal = proposals[0];
       console.log(chalk.yellow.bold(`Debugging ${proposal.proposalName}`));
       bakeTarget(imageNameForProposal(proposal, 'test').target, values.dry);
       debugTestImage(proposal);
