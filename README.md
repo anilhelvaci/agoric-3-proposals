@@ -15,6 +15,7 @@ This repo serves several functions:
 ```shell
 git checkout https://github.com/anilhelvaci/agoric-3-proposals.git
 cd agoric-3-proposals
+git checkout liq-visibility
 cd packages/synthetic-chain
 yarn install
 ```
