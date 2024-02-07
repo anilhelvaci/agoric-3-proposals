@@ -2,6 +2,7 @@
     "compilerOptions": {
         "allowImportingTsExtensions": true,
         "allowSyntheticDefaultImports": true,
+        "allowJs": true,
         "checkJs": false, // opt in
         "strict": true,
         "maxNodeModuleJsDepth": 2,
@@ -16,6 +17,7 @@
         "proposals/**/*.js",
         "proposals/**/*.ts",
         "src/**/*.js",
+        "src/**/*.ts",
         "test/**/*.js",
         "test/**/*.ts",
         "tools/**/*.js",

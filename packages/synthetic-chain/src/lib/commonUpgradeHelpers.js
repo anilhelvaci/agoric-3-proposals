@@ -144,6 +144,9 @@ export const addUser = async user => {
   return userAddress;
 };
 
+/**
+ * @returns {Promise<{ proposal_id: string, voting_end_time: unknown, status: string }>}
+ */
 export const voteLatestProposalAndWait = async () => {
   await waitForBlock();
   const proposalsData = await agd.query('gov', 'proposals');

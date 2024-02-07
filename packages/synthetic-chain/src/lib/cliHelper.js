@@ -1,4 +1,3 @@
-// @ts-expect-error XXX execa typedef
 import { $, execaCommand } from 'execa';
 import { BINARY } from './constants.js';
 

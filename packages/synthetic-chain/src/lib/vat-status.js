@@ -1,4 +1,3 @@
-// @ts-check
 import dbOpenAmbient from 'better-sqlite3';
 import { HOME } from './constants.js';
 import { NonNullish } from './assert.js';

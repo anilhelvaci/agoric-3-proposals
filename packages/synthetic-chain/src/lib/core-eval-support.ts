@@ -1,34 +1,30 @@
 import * as fsp from 'node:fs/promises';
 
-import {
-  Far,
-  makeMarshal,
-  makeTranslationTable,
-} from '@agoric/synthetic-chain/src/lib/unmarshal.js';
-import { Fail, NonNullish } from '@agoric/synthetic-chain/src/lib/assert.js';
+import { Fail, NonNullish } from './assert.js';
+import { Far, makeMarshal, makeTranslationTable } from './unmarshal.js';
 
 // TODO: factor out ambient authority from these
 // or at least allow caller to supply authority.
-import {
-  getISTBalance,
-  mintIST,
-} from '@agoric/synthetic-chain/src/lib/econHelpers.js';
-import { agoric } from '@agoric/synthetic-chain/src/lib/cliHelper.js';
+import { agoric } from './cliHelper.js';
+import { getISTBalance, mintIST } from './econHelpers.js';
+import { ExecutionContext } from 'ava';
+import { dbTool } from './vat-status.js';
+import { StaticConfig } from './core-eval.ts';
 
 // move to unmarshal.js?
 const makeBoardUnmarshal = () => {
-  const synthesizeRemotable = (_slot, iface) =>
+  const synthesizeRemotable = (_slot: unknown, iface: string) =>
     Far(iface.replace(/^Alleged: /, ''), {});
 
   const { convertValToSlot, convertSlotToVal } = makeTranslationTable(
-    slot => Fail`unknown id: ${slot}`,
+    (slot: unknown) => Fail`unknown id: ${slot}`,
     synthesizeRemotable,
   );
 
   return makeMarshal(convertValToSlot, convertSlotToVal);
 };
 
-export const getContractInfo = async (path, io = {} as any) => {
+export const getContractInfo = async (path: string, io = {} as any) => {
   const m = makeBoardUnmarshal();
   const {
     agoric: { follow = agoric.follow },
@@ -41,7 +37,13 @@ export const getContractInfo = async (path, io = {} as any) => {
 };
 
 // not really core-eval related
-export const testIncludes = (t, needle, haystack, label, sense = true) => {
+export const testIncludes = (
+  t: ExecutionContext,
+  needle: unknown,
+  haystack: unknown[],
+  label: string,
+  sense = true,
+) => {
   t.log(needle, sense ? 'in' : 'not in', haystack.length, label, '?');
   const check = sense ? t.deepEqual : t.notDeepEqual;
   if (sense) {
@@ -67,13 +69,15 @@ export const flags = (record: Record<string, string>): string[] => {
     .flat();
 };
 
-export const txAbbr = tx => {
+export const txAbbr = (tx: any) => {
   const { txhash, code, height, gas_used } = tx;
   return { txhash, code, height, gas_used };
 };
 
-export const loadedBundleIds = swingstore => {
-  const ids = swingstore`SELECT bundleID FROM bundles`.map(r => r.bundleID);
+export const loadedBundleIds = (swingstore: any) => {
+  const ids = swingstore`SELECT bundleID FROM bundles`.map(
+    (r: { bundleID: string }) => r.bundleID,
+  );
   return ids;
 };
 
@@ -87,7 +91,7 @@ export const bundleDetail = (cacheFn: string) => {
   return { fileName, endoZipBase64Sha512: hash, id };
 };
 
-const importBundleCost = (bytes, price = 0.002) => {
+const importBundleCost = (bytes: number, price = 0.002) => {
   return bytes * price;
 };
 
@@ -121,7 +125,7 @@ const mintCalc = (
 
 export const ensureISTForInstall = async (
   agd: ReturnType<typeof import('../lib/agd-lib.js').makeAgd>,
-  config,
+  config: StaticConfig,
   bytes: number,
   { log }: { log: (...args: any[]) => void },
 ) => {

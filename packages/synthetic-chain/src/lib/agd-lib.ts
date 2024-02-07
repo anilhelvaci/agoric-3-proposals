@@ -60,10 +60,9 @@ export const makeAgd = ({
     });
     const nameHub = freeze({
       /**
-       * @param {string[]} path
        * NOTE: synchronous I/O
        */
-      lookup: (...path) => {
+      lookup: (...path: string[]) => {
         if (!Array.isArray(path)) {
           // TODO: use COND || Fail``
           throw TypeError();

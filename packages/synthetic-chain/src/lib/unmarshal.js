@@ -1,5 +1,3 @@
-// @ts-check
-
 // TODO use actual @endo/marshal
 
 const {

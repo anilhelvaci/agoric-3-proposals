@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'; // TODO: use execa
+import assert from 'node:assert';
 import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
 import * as process from 'node:process';
@@ -6,12 +7,11 @@ import * as process from 'node:process';
 import { ZipReader } from '@endo/zip';
 import dbOpen from 'better-sqlite3';
 
-import assert from 'node:assert';
-import { makeAgd } from '@agoric/synthetic-chain/src/lib/agd-lib.js';
-import { agoric } from '@agoric/synthetic-chain/src/lib/cliHelper.js';
-import { voteLatestProposalAndWait } from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
-import { dbTool } from '@agoric/synthetic-chain/src/lib/vat-status.js';
-import { type WebCache } from '@agoric/synthetic-chain/src/lib/webAsset.js';
+import { makeAgd } from './agd-lib.js';
+import { agoric } from './cliHelper.js';
+import { voteLatestProposalAndWait } from './commonUpgradeHelpers.js';
+import { dbTool } from './vat-status.js';
+import { type WebCache } from './webAsset.js';
 import {
   BundleInfo,
   bundleDetail,
@@ -21,8 +21,8 @@ import {
   loadedBundleIds,
   readBundles,
   txAbbr,
-} from '@agoric/synthetic-chain/src/lib/core-eval-support.js';
-import { step } from '@agoric/synthetic-chain/src/lib/logging.js';
+} from './core-eval-support.js';
+import { step } from './logging.js';
 
 export const staticConfig = {
   deposit: '10000000ubld', // 10 BLD
@@ -30,6 +30,10 @@ export const staticConfig = {
   proposer: 'validator',
   collateralPrice: 6, // conservatively low price. TODO: look up
   swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
+};
+
+export type StaticConfig = typeof staticConfig & {
+  bundleInfos?: Record<string, BundleInfo>;
 };
 
 const makeFakeWebCache = (base: string): WebCache => {
@@ -57,11 +61,8 @@ const makeFakeWebCache = (base: string): WebCache => {
  * Provide access to the outside world via context.
  *
  * TODO: refactor overlap with mn2-start.test.js
- *
- * @param {*} t
- * @param {object} io
  */
-const makeTestContext = async staticConfig => {
+const makeTestContext = async (staticConfig: StaticConfig) => {
   // assume filenames don't overlap
   const bundleAssets = makeFakeWebCache('submission');
   console.log(`bundleAssets: ${bundleAssets}`);
@@ -115,7 +116,7 @@ export const passCoreEvalProposal = async (
   const bundleEntry = async (bundle: { endoZipBase64: string }) => {
     const getZipReader = async () => {
       const { endoZipBase64 } = bundle;
-      const toBlob = (base64, type = 'application/octet-stream') =>
+      const toBlob = (base64: string, type = 'application/octet-stream') =>
         fetch(`data:${type};base64,${base64}`).then(res => res.blob());
       const zipBlob = await toBlob(endoZipBase64);
       // https://github.com/endojs/endo/issues/1811#issuecomment-1751499626
@@ -124,7 +125,7 @@ export const passCoreEvalProposal = async (
       return new ZipReader(bytes);
     };
 
-    const getCompartmentMap = zipRd => {
+    const getCompartmentMap = (zipRd: ZipReader) => {
       const { content } = zipRd.files.get('compartment-map.json');
       const td = new TextDecoder();
       const cmap = JSON.parse(td.decode(content));
@@ -216,7 +217,9 @@ export const passCoreEvalProposal = async (
     const { agd, swingstore, config } = context;
     const from = agd.lookup(config.proposer);
     const { chainId, deposit, bundleAssets } = config;
+    // @ts-expect-error FIXME
     const info = { title: config.title, description: config.description };
+    // @ts-expect-error FIXME
     console.log('submit proposal', config.title);
 
     // double-check that bundles are loaded
