@@ -26,6 +26,36 @@ The `-p` is short for [publish](https://docs.docker.com/network/#published-ports
 
 ## Design
 
+## Notes to BytePitch Boys
+### Check out the repo
+```shell
+git checkout https://github.com/anilhelvaci/agoric-3-proposals.git
+cd agoric-3-proposals
+cd packages/synthetic-chain
+yarn install
+```
+
+### Create your own proposal
+```shell
+cd agoric-3-proposals
+## Proposal not made it to the Mainnet yet must start with a letter. For instance; b:liquidation-visibility
+mkdir proposals/b:liquidation-visibility
+cp -r proposals/64:crabble-start/* proposals/b:liquidation-visibility
+## Remove crabble related stuff
+rm -rf proposals/b:liquidation-visibility/assets proposals/b:liquidation-visibility/test-crabble-start.js
+## Create your own test file
+touch proposals/b:liquidation-visibility/test-liquidation-visibility.js
+```
+
+### Test your proposal
+```shell
+cd agoric-3-proposals
+docker run -it --entrypoint bash --mount type=bind,src=.,dst=/usr/src/a3p ghcr.io/agoric/agoric-3-proposals
+### Below here is the container's shell ###
+cd /usr/src/upgrade-test-scripts
+./install_deps.sh
+```
+
 ## Stages
 
 The build is [multi-stage](https://docs.docker.com/build/building/multi-stage/) with several kinds of stages:
