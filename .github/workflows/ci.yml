@@ -34,6 +34,25 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  test-package:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup
+        run: |
+          # Enable corepack for packageManager config
+          corepack enable || sudo corepack enable
+          yarn install
+
+      - name: Format
+        run: yarn format --check
+
+      - name: Typecheck
+        run: yarn tsc
+        working-directory: packages/synthetic-chain
+
   # see https://docs.docker.com/build/ci/github-actions/test-before-push/
   test-proposals:
     permissions:
