@@ -63,11 +63,17 @@ fi
 startAgd() {
   echo "startAgd()"
 
+  # XXX debugging https://github.com/Agoric/agoric-3-proposals/issues/93
+  apt install net-tools
+  netstat
+
   agd start --log_level warn "$@" &
   AGD_PID=$!
   echo $AGD_PID >$HOME/.agoric/agd.pid
   wait_for_bootstrap
+  echo "Bootstrap reached, wait two more blocks for race conditions to settle"
   waitForBlock 2
+  echo "startAgd() done"
 }
 
 killAgd() {
@@ -92,12 +98,14 @@ provisionSmartWallet() {
   agoric wallet show --from "$addr"
 }
 
+# XXX designed for ag0, others start well above height 1
 wait_for_bootstrap() {
   echo "waiting for bootstrap..."
   endpoint="localhost"
   while true; do
     if json=$(curl -s --fail -m 15 "$endpoint:26657/status"); then
       if [[ "$(echo "$json" | jq -r .jsonrpc)" == "2.0" ]]; then
+        # XXX the waitForBlock() function depends on this exact output
         if last_height=$(echo "$json" | jq -r .result.sync_info.latest_block_height); then
           if [[ "$last_height" != "1" ]]; then
             echo "$last_height"
