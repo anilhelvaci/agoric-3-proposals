@@ -9,7 +9,7 @@ export type AgoricSyntheticChainConfig = {
   /**
    * The agoric-3-proposals tag to build the agoric synthetic chain from.
    * If `null`, the chain is built from an ag0 genesis.
-   * Defaults to `main`, which containing all passed proposals
+   * Defaults to `latest`, which containing all passed proposals
    */
   fromTag: string | null;
   platforms?: Platform[];
@@ -17,7 +17,8 @@ export type AgoricSyntheticChainConfig = {
 
 const defaultConfig: AgoricSyntheticChainConfig = {
   // Tag of the agoric-3 image containing all passed proposals
-  fromTag: 'main',
+  // Must match the Bake file and CI config
+  fromTag: 'latest',
 };
 
 export function readBuildConfig(root: string): AgoricSyntheticChainConfig {

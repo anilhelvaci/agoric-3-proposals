@@ -166,15 +166,15 @@ ENTRYPOINT ./run_test.sh ${proposalIdentifier}:${proposalName}
   /**
    * The last target in the file, for untargeted `docker build`
    */
-  DEFAULT(lastProposal: ProposalInfo) {
+  LAST(lastProposal: ProposalInfo) {
     // Assumes the 'use' image is built and tagged.
     // This isn't necessary for a multi-stage build, but without it CI
     // rebuilds the last "use" image during the "default" image step
     // Some background: https://github.com/moby/moby/issues/34715
     const useImage = imageNameForProposal(lastProposal, 'use').name;
     return `
-# DEFAULT
-FROM ${useImage}
+# LAST
+FROM ${useImage} as latest
 `;
   },
 };
@@ -255,7 +255,7 @@ export function writeDockerfile(
   // If one of the proposals is a passed proposal, make the latest one the default entrypoint
   const lastPassed = allProposals.findLast(isPassed);
   if (lastPassed) {
-    blocks.push(stage.DEFAULT(lastPassed));
+    blocks.push(stage.LAST(lastPassed));
   }
 
   const contents = blocks.join('\n');
