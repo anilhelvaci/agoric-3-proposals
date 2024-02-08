@@ -12,7 +12,7 @@ const fixupProposal = (proposal: ProposalInfo) => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(proposalPath, 'package.json'), 'utf-8'),
   );
-  if (packageJson.dependencies) {
+  if (packageJson.dependencies || packageJson.devDependencies) {
     assert(
       packageJson.packageManager,
       'missing packageManager in package.json',
