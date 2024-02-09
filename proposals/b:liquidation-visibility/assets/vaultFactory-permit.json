@@ -1,0 +1,52 @@
+{
+  "consume": {
+    "board": "board",
+    "chainStorage": true,
+    "diagnostics": true,
+    "feeMintAccess": "zoe",
+    "chainTimerService": "timer",
+    "zoe": "zoe",
+    "priceAuthority": "priceAuthority",
+    "economicCommitteeCreatorFacet": "economicCommittee",
+    "reserveKit": "reserve",
+    "auctioneerKit": "auction",
+    "agoricNamesAdmin": "makeCoreProposalBehavior",
+    "vatAdminSvc": "makeCoreProposalBehavior"
+  },
+  "produce": {
+    "vaultFactoryKit": "VaultFactory"
+  },
+  "brand": {
+    "consume": {
+      "IST": "zoe"
+    }
+  },
+  "oracleBrand": {
+    "consume": {
+      "USD": true
+    }
+  },
+  "installation": {
+    "consume": {
+      "contractGovernor": "zoe",
+      "VaultFactory": "zoe"
+    },
+    "produce": "makeCoreProposalBehavior"
+  },
+  "instance": {
+    "consume": {
+      "reserve": "reserve",
+      "auctioneer": "auction"
+    },
+    "produce": {
+      "VaultFactory": "VaultFactory",
+      "VaultFactoryGovernor": "VaultFactoryGovernor"
+    }
+  },
+  "evaluateBundleCap": "makeCoreProposalBehavior",
+  "modules": {
+    "utils": {
+      "runModuleBehaviors": "makeCoreProposalBehavior"
+    }
+  }
+}
