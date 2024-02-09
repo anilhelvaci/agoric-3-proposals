@@ -27,7 +27,7 @@ else
     # copy to run in the proposal package so the dependencies can be resolved
     cp /usr/src/upgrade-test-scripts/eval_submission.ts .
     # eval_submission doesn't really need to be .ts but it imports .ts files
-    tsx --version || npm install --global tsx
+    which tsx || npm install --global tsx
     ./eval_submission.ts
 fi
 

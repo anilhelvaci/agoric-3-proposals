@@ -105,7 +105,7 @@ jobs:
       - name: Setup synthetic-chain
         run: |
           # The .ts scripts depend upon this
-          tsx --version || npm install --global tsx
+          which tsx || npm install --global tsx
           # Enable corepack for packageManager config
           corepack enable || sudo corepack enable
           yarn install
