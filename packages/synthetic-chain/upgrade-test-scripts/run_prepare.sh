@@ -29,6 +29,18 @@ fi
 
 startAgd
 
+echo "[$PROPOSAL] Agd started."
+cd /usr/src/proposals/"$PROPOSAL/" || fail "Proposal $PROPOSAL does not exist"
+
+if [ -f "prepare.sh" ]; then
+  # In case the proposal needs some chain actions to be done before the upgrade,
+  # for example to set up some state that is tested after the upgrade.
+  echo "[$PROPOSAL] Running prepare.sh"
+  ./prepare.sh
+fi
+
+echo "[$PROPOSAL] Voting in the upgrade."
+
 voting_period_s=10
 latest_height=$(agd status | jq -r .SyncInfo.latest_block_height)
 height=$((latest_height + voting_period_s + 20))
