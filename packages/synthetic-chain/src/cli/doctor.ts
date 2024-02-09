@@ -5,10 +5,7 @@ import assert from 'node:assert';
 import { execSync } from 'node:child_process';
 
 const fixupProposal = (proposal: ProposalInfo) => {
-  const proposalPath = path.join(
-    'proposals',
-    `${proposal.proposalIdentifier}:${proposal.proposalName}`,
-  );
+  const proposalPath = path.join('proposals', proposal.path);
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(proposalPath, 'package.json'), 'utf-8'),
   );

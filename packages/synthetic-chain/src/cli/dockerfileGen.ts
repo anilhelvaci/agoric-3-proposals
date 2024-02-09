@@ -76,11 +76,7 @@ RUN ./run_prepare.sh
    * - Start agd with the SDK that has the upgradeHandler
    * - Run any core-evals associated with the proposal (either the ones specified in prepare, or straight from the proposal)
    */
-  EXECUTE({
-    proposalIdentifier,
-    proposalName,
-    sdkImageTag,
-  }: SoftwareUpgradeProposal) {
+  EXECUTE({ path, proposalName, sdkImageTag }: SoftwareUpgradeProposal) {
     return `
 # EXECUTE ${proposalName}
 FROM ghcr.io/agoric/agoric-sdk:${sdkImageTag} as execute-${proposalName}
@@ -88,9 +84,9 @@ FROM ghcr.io/agoric/agoric-sdk:${sdkImageTag} as execute-${proposalName}
 WORKDIR /usr/src/upgrade-test-scripts
 
 # base is a fresh sdk image so set up the proposal and its dependencies
-COPY --link --chmod=755 ./proposals/${proposalIdentifier}:${proposalName} /usr/src/proposals/${proposalIdentifier}:${proposalName}
+COPY --link --chmod=755 ./proposals/${path} /usr/src/proposals/${path}
 COPY --link --chmod=755 ./upgrade-test-scripts/env_setup.sh ./upgrade-test-scripts/run_execute.sh  ./upgrade-test-scripts/start_to_to.sh ./upgrade-test-scripts/install_deps.sh /usr/src/upgrade-test-scripts/
-RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${proposalIdentifier}:${proposalName}
+RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${path}
 
 COPY --link --from=prepare-${proposalName} /root/.agoric /root/.agoric
 
@@ -102,25 +98,22 @@ RUN ./run_execute.sh
    * Run a core-eval proposal
    * - Run the core-eval scripts from the proposal. They are only guaranteed to have started, not completed.
    */
-  EVAL(
-    { proposalIdentifier, proposalName }: CoreEvalProposal,
-    lastProposal: ProposalInfo,
-  ) {
+  EVAL({ path, proposalName }: CoreEvalProposal, lastProposal: ProposalInfo) {
     return `
 # EVAL ${proposalName}
 FROM use-${lastProposal.proposalName} as eval-${proposalName}
 
-COPY --link --chmod=755 ./proposals/${proposalIdentifier}:${proposalName} /usr/src/proposals/${proposalIdentifier}:${proposalName}
+COPY --link --chmod=755 ./proposals/${path} /usr/src/proposals/${path}
 
 WORKDIR /usr/src/upgrade-test-scripts
 
 # First stage of this proposal so install its deps.
 COPY --link ./upgrade-test-scripts/install_deps.sh /usr/src/upgrade-test-scripts/
-RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${proposalIdentifier}:${proposalName}
+RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${path}
 
 COPY --link --chmod=755 ./upgrade-test-scripts/*eval* /usr/src/upgrade-test-scripts/
 SHELL ["/bin/bash", "-c"]
-RUN ./run_eval.sh ${proposalIdentifier}:${proposalName}
+RUN ./run_eval.sh ${path}
 `;
   },
   /**
@@ -128,7 +121,7 @@ RUN ./run_eval.sh ${proposalIdentifier}:${proposalName}
    *
    * - Perform any mutations that should be part of chain history
    */
-  USE({ proposalName, proposalIdentifier, type }: ProposalInfo) {
+  USE({ path, proposalName, type }: ProposalInfo) {
     const previousStage =
       type === 'Software Upgrade Proposal' ? 'execute' : 'eval';
     return `
@@ -139,7 +132,7 @@ WORKDIR /usr/src/upgrade-test-scripts
 
 COPY --link --chmod=755 ./upgrade-test-scripts/run_use.sh ./upgrade-test-scripts/start_agd.sh /usr/src/upgrade-test-scripts/
 SHELL ["/bin/bash", "-c"]
-RUN ./run_use.sh ${proposalIdentifier}:${proposalName}
+RUN ./run_use.sh ${path}
 ENTRYPOINT ./start_agd.sh
 `;
   },
@@ -151,7 +144,7 @@ ENTRYPOINT ./start_agd.sh
    *
    * Needs to be an image to have access to the SwingSet db. run it with `docker run --rm` to not make the container ephemeral.
    */
-  TEST({ proposalName, proposalIdentifier }: ProposalInfo) {
+  TEST({ path, proposalName }: ProposalInfo) {
     return `
 # TEST ${proposalName}
 FROM use-${proposalName} as test-${proposalName}
@@ -160,7 +153,7 @@ WORKDIR /usr/src/upgrade-test-scripts
 
 COPY --link --chmod=755 ./upgrade-test-scripts/run_test.sh /usr/src/upgrade-test-scripts/
 SHELL ["/bin/bash", "-c"]
-ENTRYPOINT ./run_test.sh ${proposalIdentifier}:${proposalName}
+ENTRYPOINT ./run_test.sh ${path}
 `;
   },
   /**

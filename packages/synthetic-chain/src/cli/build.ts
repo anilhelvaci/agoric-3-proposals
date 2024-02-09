@@ -41,7 +41,7 @@ export const buildProposalSubmissions = (proposals: ProposalInfo[]) => {
       proposal.proposalName,
     );
     const { buildScript } = proposal;
-    const proposalPath = `proposals/${proposal.proposalIdentifier}:${proposal.proposalName}`;
+    const proposalPath = `proposals/${path}`;
     const submissionPath = `${proposalPath}/submission`;
     const relativeBuildScript = path.relative(submissionPath, buildScript);
 
