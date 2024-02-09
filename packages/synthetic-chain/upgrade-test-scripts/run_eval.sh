@@ -8,14 +8,13 @@ source ./env_setup.sh
 
 PROPOSAL=$1
 if [ -z "$PROPOSAL" ]; then
-    echo "Must specify what proposal to use"
-    exit 1
+    fail "Must specify what proposal to use"
 fi
 
 startAgd
 
 echo "[$PROPOSAL] Agd started. Running CoreEval submission."
-cd /usr/src/proposals/"$PROPOSAL/" || exit
+cd /usr/src/proposals/"$PROPOSAL/" || fail "Proposal $PROPOSAL does not exist"
 
 if [ -f "eval.sh" ]; then
     # this is what the script used to do. Also allows a proposal to override how they are eval-ed

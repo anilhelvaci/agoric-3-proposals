@@ -5,8 +5,7 @@
 set -e
 PROPOSAL=$1
 if [ -z "$PROPOSAL" ]; then
-    echo "Must specify what proposal to use"
-    exit 1
+  fail "Must specify what proposal to use"
 fi
 
 # figlet -f cyberlarge Test proposal outcome
@@ -30,7 +29,7 @@ source ./env_setup.sh
 startAgd
 
 echo "[$PROPOSAL] Running test.sh."
-cd /usr/src/proposals/"$PROPOSAL/" || exit
+cd /usr/src/proposals/"$PROPOSAL/" || fail "Proposal $PROPOSAL does not exist"
 ./test.sh
 
 echo "[$PROPOSAL] Testing completed."
