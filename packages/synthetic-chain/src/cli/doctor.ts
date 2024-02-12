@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ProposalInfo } from './proposals.ts';
+import { ProposalInfo } from './proposals.js';
 import assert from 'node:assert';
 import { execSync } from 'node:child_process';
 

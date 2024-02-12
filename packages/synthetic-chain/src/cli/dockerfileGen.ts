@@ -10,7 +10,7 @@ import {
   imageNameForProposal,
   isPassed,
 } from './proposals.js';
-import { Platform } from './build.ts';
+import { Platform } from './build.js';
 
 /**
  * Templates for Dockerfile stages

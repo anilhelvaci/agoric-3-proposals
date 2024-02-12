@@ -8,8 +8,7 @@ import { Far, makeMarshal, makeTranslationTable } from './unmarshal.js';
 import { agoric } from './cliHelper.js';
 import { getISTBalance, mintIST } from './econHelpers.js';
 import { ExecutionContext } from 'ava';
-import { dbTool } from './vat-status.js';
-import { StaticConfig } from './core-eval.ts';
+import { StaticConfig } from './core-eval.js';
 
 // move to unmarshal.js?
 const makeBoardUnmarshal = () => {
