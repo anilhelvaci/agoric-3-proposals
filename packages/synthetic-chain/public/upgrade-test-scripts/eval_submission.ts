@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
 
-import { evalBundles } from '@agoric/synthetic-chain/src/lib/core-eval.js';
+import { evalBundles } from '@agoric/synthetic-chain';
 
 await evalBundles('submission');
