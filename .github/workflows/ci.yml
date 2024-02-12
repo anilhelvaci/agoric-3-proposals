@@ -102,15 +102,18 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Setup synthetic-chain
+      - name: Build @agoric/synthetic-chain
         run: |
-          # The .ts scripts depend upon this
-          which tsx || npm install --global tsx
           # Enable corepack for packageManager config
           corepack enable || sudo corepack enable
           yarn install
+          yarn build
+        working-directory: packages/synthetic-chain
+
+      - name: Prepare Docker config
+        run: |
           # prepare files for bake-action
-          tsx packages/synthetic-chain prepare-build
+          yarn synthetic-chain prepare-build
 
       # Verify that all "use" images build across platforms.
       - name: Build proposal "use" images

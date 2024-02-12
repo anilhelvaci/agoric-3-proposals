@@ -4,8 +4,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsx packages/synthetic-chain build",
-    "test": "tsx packages/synthetic-chain test",
+    "build": "yarn synthetic-chain build",
+    "test": "yarn synthetic-chain test",
     "format": "prettier --write ."
   },
   "dependencies": {
