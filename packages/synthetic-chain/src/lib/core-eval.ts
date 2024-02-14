@@ -32,30 +32,7 @@ export const staticConfig = {
   swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
 };
 
-export type StaticConfig = typeof staticConfig & {
-  bundleInfos?: Record<string, BundleInfo>;
-};
-
-const makeFakeWebCache = (base: string): WebCache => {
-  return {
-    getText(segment: string) {
-      return fsp.readFile(path.join(base, segment), 'utf8');
-    },
-    async storedPath(segment: string) {
-      return path.join(base, segment);
-    },
-    async size(segment: string) {
-      const info = await fsp.stat(path.join(base, segment));
-      return info.size;
-    },
-    toString() {
-      return 'fake web cache';
-    },
-    async remove() {
-      console.warn('noop remove');
-    },
-  };
-};
+export type StaticConfig = typeof staticConfig;
 
 /**
  * Provide access to the outside world via context.
@@ -63,12 +40,7 @@ const makeFakeWebCache = (base: string): WebCache => {
  * TODO: refactor overlap with mn2-start.test.js
  */
 const makeTestContext = async (staticConfig: StaticConfig) => {
-  // assume filenames don't overlap
-  const bundleAssets = makeFakeWebCache('submission');
-  console.log(`bundleAssets: ${bundleAssets}`);
-
   const config = {
-    bundleAssets,
     chainId: 'agoriclocal',
     ...staticConfig,
   };
@@ -84,20 +56,16 @@ const makeTestContext = async (staticConfig: StaticConfig) => {
   return { agd, agoric, swingstore, config, before, fetch };
 };
 
-export const passCoreEvalProposal = async (
-  bundleMap: Record<string, BundleInfo>,
-) => {
+export const passCoreEvalProposal = async (bundleInfos: BundleInfo[]) => {
   // XXX vestige of Ava
   const config = {
     ...staticConfig,
-    bundleInfos: bundleMap,
   };
   const context = await makeTestContext(config);
-  const bundleInfos = Object.values(bundleMap);
 
   await step('bundles not yet installed', async () => {
     const loaded = loadedBundleIds(context.swingstore);
-    for (const [name, { bundles, evals }] of Object.entries(bundleMap)) {
+    for (const { name, bundles, evals } of bundleInfos) {
       console.log(
         name,
         evals[0].script,
@@ -138,11 +106,12 @@ export const passCoreEvalProposal = async (
   };
 
   await step('bundle names: compartmentMap.entry', async () => {
-    const { bundleAssets } = context.config;
-    for (const { bundles, evals } of bundleInfos) {
+    for (const { bundles, dir } of bundleInfos) {
       for (const bundleRef of bundles) {
         const { fileName } = bundleDetail(bundleRef);
-        const bundle = JSON.parse(await bundleAssets.getText(fileName));
+        const bundle = JSON.parse(
+          await fsp.readFile(path.join(dir, fileName), 'utf8'),
+        );
         const entry = await bundleEntry(bundle);
         console.log(entry, fileName.slice(0, 'b1-12345'.length));
         assert(entry.compartment);
@@ -153,13 +122,15 @@ export const passCoreEvalProposal = async (
 
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
-  const readBundleSizes = async (assets: WebCache) => {
+  const readBundleSizes = async () => {
     const bundleSizes = await Promise.all(
-      bundleInfos
-        .map(({ bundles }) =>
-          bundles.map(b => assets.size(bundleDetail(b).fileName)),
-        )
-        .flat(),
+      bundleInfos.flatMap(({ bundles, dir }) =>
+        bundles.map(async b => {
+          const { fileName } = bundleDetail(b);
+          const stat = await fsp.stat(path.join(dir, fileName));
+          return stat.size;
+        }),
+      ),
     );
     const totalSize = sum(bundleSizes);
     return { bundleSizes, totalSize };
@@ -167,7 +138,7 @@ export const passCoreEvalProposal = async (
 
   await step('ensure enough IST to install bundles', async () => {
     const { agd, config } = context;
-    const { totalSize } = await readBundleSizes(config.bundleAssets);
+    const { totalSize } = await readBundleSizes();
 
     await ensureISTForInstall(agd, config, totalSize, {
       log: console.log,
@@ -176,13 +147,13 @@ export const passCoreEvalProposal = async (
 
   await step('ensure bundles installed', async () => {
     const { agd, swingstore, agoric, config } = context;
-    const { chainId, bundleAssets } = config;
+    const { chainId } = config;
     const loaded = loadedBundleIds(swingstore);
     const from = agd.lookup(config.installer);
 
     let todo = 0;
     let done = 0;
-    for (const { bundles } of bundleInfos) {
+    for (const { bundles, dir } of bundleInfos) {
       todo += bundles.length;
       for (const bundle of bundles) {
         const { id, fileName, endoZipBase64Sha512 } = bundleDetail(bundle);
@@ -192,7 +163,7 @@ export const passCoreEvalProposal = async (
           continue;
         }
 
-        const bundleRd = await bundleAssets.storedPath(fileName);
+        const bundleRd = path.join(dir, fileName);
         const result = await agd.tx(
           ['swingset', 'install-bundle', `@${bundleRd}`, '--gas', 'auto'],
           { from, chainId, yes: true },
@@ -216,7 +187,7 @@ export const passCoreEvalProposal = async (
   await step('core eval proposal passes', async () => {
     const { agd, swingstore, config } = context;
     const from = agd.lookup(config.proposer);
-    const { chainId, deposit, bundleAssets } = config;
+    const { chainId, deposit } = config;
     // @ts-expect-error FIXME
     const info = { title: config.title, description: config.description };
     // @ts-expect-error FIXME
@@ -233,14 +204,12 @@ export const passCoreEvalProposal = async (
       }
     }
 
-    const evalNames = bundleInfos
-      .map(({ evals }) => evals)
-      .flat()
-      .map(e => [e.permit, e.script])
-      .flat();
-    const evalPaths = await Promise.all(
-      evalNames.map(e => bundleAssets.storedPath(e)),
-    );
+    const evalPaths = bundleInfos.flatMap(({ evals, dir }) => {
+      return evals
+        .flatMap(e => [e.permit, e.script])
+        .map(file => path.join(dir, file));
+    });
+
     const result = await agd.tx(
       [
         'gov',
@@ -262,7 +231,7 @@ export const passCoreEvalProposal = async (
 };
 
 export const evalBundles = async (dir: string) => {
-  const bundleMap = await readBundles(dir);
+  const bundleInfos = await readBundles(dir);
 
-  await passCoreEvalProposal(bundleMap);
+  await passCoreEvalProposal(bundleInfos);
 };

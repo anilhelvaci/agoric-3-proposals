@@ -9,6 +9,7 @@ import { agoric } from './cliHelper.js';
 import { getISTBalance, mintIST } from './econHelpers.js';
 import { ExecutionContext } from 'ava';
 import { StaticConfig } from './core-eval.js';
+import path from 'node:path';
 
 // move to unmarshal.js?
 const makeBoardUnmarshal = () => {
@@ -95,6 +96,8 @@ const importBundleCost = (bytes: number, price = 0.002) => {
 };
 
 export type BundleInfo = {
+  name: string;
+  dir: string;
   bundles: string[];
   evals: { permit: string; script: string }[];
 };
@@ -150,13 +153,13 @@ export const ensureISTForInstall = async (
 export const readBundles = async (dir: string) => {
   const files = await fsp.readdir(dir);
   const names = files.filter(f => f.endsWith('.js')).map(f => f.slice(0, -3));
-  const buildAssets = {} as Record<string, BundleInfo>;
+  const bundleInfos: BundleInfo[] = [];
   for (const name of names) {
     const evals = [{ permit: `${name}-permit.json`, script: `${name}.js` }];
-    const content = await fsp.readFile(`${dir}/${name}.js`, 'utf8');
+    const content = await fsp.readFile(path.join(dir, `${name}.js`), 'utf8');
     const bundleIds = content.matchAll(/b1-[a-z0-9]+/g);
     const bundles = Array.from(bundleIds).map(id => `${id}.json`);
-    buildAssets[name] = { evals, bundles };
+    bundleInfos.push({ evals, bundles, name, dir });
   }
-  return buildAssets;
+  return bundleInfos;
 };
