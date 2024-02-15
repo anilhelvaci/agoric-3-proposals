@@ -8,37 +8,29 @@
  */
 
 import anyTest from 'ava';
+import dbOpenAmbient from 'better-sqlite3';
 import * as cpAmbient from 'child_process';
 import * as fspAmbient from 'fs/promises';
 import * as pathAmbient from 'path';
 import * as processAmbient from 'process';
 import { tmpName as tmpNameAmbient } from 'tmp';
-import dbOpenAmbient from 'better-sqlite3';
 
 import { makeAgd } from '@agoric/synthetic-chain/src/lib/agd-lib.js';
+import {
+  agoric,
+  wellKnownIdentities,
+} from '@agoric/synthetic-chain/src/lib/cliHelper.js';
 import { dbTool } from '@agoric/synthetic-chain/src/lib/vat-status.js';
 import {
   makeFileRd,
   makeFileRW,
 } from '@agoric/synthetic-chain/src/lib/webAsset.js';
 import {
-  agoric,
-  wellKnownIdentities,
-} from '@agoric/synthetic-chain/src/lib/cliHelper.js';
-import {
-  provisionSmartWallet,
-  voteLatestProposalAndWait,
-  waitForBlock,
-} from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
-import {
-  ensureISTForInstall,
-  flags,
-  getContractInfo,
+  ensureISTForInstall, getContractInfo,
   loadedBundleIds,
   testIncludes,
-  txAbbr,
+  txAbbr
 } from './core-eval-support.js';
-import { ZipReader } from '@endo/zip';
 
 /** @typedef {Awaited<ReturnType<typeof makeTestContext>>} TestContext */
 /** @type {import('ava').TestFn<TestContext>}} */
@@ -51,9 +43,7 @@ const assetInfo = {
       evals: [
         { permit: 'vaultFactory-permit.json', script: 'vaultFactory.js' },
       ],
-      bundles: [
-        'b1-5302546fafc63a2ef36142fb50c2333eb5e6775f6eebb725d1e3ce83aad7b27b3341992d9d83488383bfd19784b241fccc29a8cb9eeb9ebf33059b3976ff9b22.json',
-      ],
+      bundles: ['bundle-vaultFactory.json'],
     },
   },
 };
@@ -177,8 +167,6 @@ const readBundleSizes = async src => {
   return { bundleSizes, totalSize };
 };
 
-const minute = 60 / 1; // block time is ~1sec
-
 test.serial('ensure enough IST to install bundles', async t => {
   const { agd, config, src } = t.context;
   const { totalSize, bundleSizes } = await readBundleSizes(src);
@@ -211,7 +199,7 @@ test.serial('ensure bundles installed', async t => {
       }
 
       const result = await agd.tx(
-        ['swingset', 'install-bundle', `@${absPath}`, '--gas', 'auto'],
+        ['swingset', 'install-bundle', `@${absPath}`, '--gas', '120000000'],
         { from, chainId, yes: true },
       );
       t.log(txAbbr(result));
