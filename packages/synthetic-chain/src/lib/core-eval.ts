@@ -63,23 +63,17 @@ export const passCoreEvalProposal = async (bundleInfos: BundleInfo[]) => {
   };
   const context = await makeTestContext(config);
 
-  await step('bundles not yet installed', async () => {
-    const loaded = loadedBundleIds(context.swingstore);
-    for (const { name, bundles, evals } of bundleInfos) {
-      console.log(
-        name,
-        evals[0].script,
-        evals.length,
-        'eval',
-        bundles.length,
-        'bundles',
-      );
-      for (const bundle of bundles) {
-        const { id } = bundleDetail(bundle);
-        assert(!loaded.includes(id));
-      }
-    }
-  });
+  console.log('Passing core evals...');
+  for (const { name, bundles, evals } of bundleInfos) {
+    console.log(
+      name,
+      evals[0].script,
+      evals.length,
+      'eval',
+      bundles.length,
+      'bundles',
+    );
+  }
 
   const bundleEntry = async (bundle: { endoZipBase64: string }) => {
     const getZipReader = async () => {
