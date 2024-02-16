@@ -145,11 +145,27 @@ export const addUser = async user => {
 };
 
 /**
+ * @params {string} [title]
  * @returns {Promise<{ proposal_id: string, voting_end_time: unknown, status: string }>}
  */
-export const voteLatestProposalAndWait = async () => {
+export const voteLatestProposalAndWait = async title => {
   await waitForBlock();
-  const proposalsData = await agd.query('gov', 'proposals');
+  let proposalsData = await agd.query('gov', 'proposals');
+  if (title) {
+    proposalsData = proposalsData.filter(proposal => {
+      if (proposal.content) {
+        return proposal.content.title === title;
+      } else if (proposal.messages) {
+        return proposal.messages.some(message => {
+          message['@type'] === '/cosmos.gov.v1.MsgExecLegacyContent' ||
+            Fail`Unsupported proposal message type ${message['@type']}`;
+          return proposal.content.title === title;
+        });
+      } else {
+        Fail`Unrecognized proposal shape ${Object.keys(proposal)}`;
+      }
+    });
+  }
   let lastProposal = proposalsData.proposals.at(-1);
 
   lastProposal || Fail`No proposal found`;
@@ -293,5 +309,5 @@ export const submitProposal = async (
     '--yes',
   );
 
-  await voteLatestProposalAndWait();
+  await voteLatestProposalAndWait(title);
 };

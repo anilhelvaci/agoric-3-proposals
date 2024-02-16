@@ -34,15 +34,24 @@ export const staticConfig = {
 
 export type StaticConfig = typeof staticConfig;
 
+export type CoreEvalConfig = {
+  title?: string;
+  description?: string;
+};
+
 /**
  * Provide access to the outside world via context.
  *
  * TODO: refactor overlap with mn2-start.test.js
  */
-const makeTestContext = async (staticConfig: StaticConfig) => {
+const makeTestContext = async (
+  staticConfig: StaticConfig,
+  coreEvalConfig: CoreEvalConfig,
+) => {
   const config = {
     chainId: 'agoriclocal',
     ...staticConfig,
+    ...coreEvalConfig,
   };
 
   const agd = makeAgd({ execFileSync }).withOpts({
@@ -56,12 +65,15 @@ const makeTestContext = async (staticConfig: StaticConfig) => {
   return { agd, agoric, swingstore, config, before, fetch };
 };
 
-export const passCoreEvalProposal = async (bundleInfos: BundleInfo[]) => {
+export const passCoreEvalProposal = async (
+  bundleInfos: BundleInfo[],
+  coreEvalConfig: CoreEvalConfig = {},
+) => {
   // XXX vestige of Ava
   const config = {
     ...staticConfig,
   };
-  const context = await makeTestContext(config);
+  const context = await makeTestContext(config, coreEvalConfig);
 
   console.log('Passing core evals...');
   for (const { name, bundles, evals } of bundleInfos) {
@@ -182,10 +194,11 @@ export const passCoreEvalProposal = async (bundleInfos: BundleInfo[]) => {
     const { agd, swingstore, config } = context;
     const from = agd.lookup(config.proposer);
     const { chainId, deposit } = config;
-    // @ts-expect-error FIXME
-    const info = { title: config.title, description: config.description };
-    // @ts-expect-error FIXME
-    console.log('submit proposal', config.title);
+    const info = {
+      title: config.title || `Core Eval ${Date.now()}`,
+      description: config.description || 'Core eval proposal',
+    };
+    console.log('submit proposal', info.title);
 
     // double-check that bundles are loaded
     const loaded = loadedBundleIds(swingstore);
@@ -218,7 +231,7 @@ export const passCoreEvalProposal = async (bundleInfos: BundleInfo[]) => {
     console.log(txAbbr(result));
     assert.equal(result.code, 0);
 
-    const detail = await voteLatestProposalAndWait();
+    const detail = await voteLatestProposalAndWait(info.title);
     console.log(detail.proposal_id, detail.voting_end_time, detail.status);
     assert.equal(detail.status, 'PROPOSAL_STATUS_PASSED');
   });
@@ -227,5 +240,5 @@ export const passCoreEvalProposal = async (bundleInfos: BundleInfo[]) => {
 export const evalBundles = async (dir: string) => {
   const bundleInfos = await readBundles(dir);
 
-  await passCoreEvalProposal(bundleInfos);
+  await passCoreEvalProposal(bundleInfos, { title: `Core eval of ${dir}` });
 };
