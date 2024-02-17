@@ -150,23 +150,23 @@ export const addUser = async user => {
  */
 export const voteLatestProposalAndWait = async title => {
   await waitForBlock();
-  let proposalsData = await agd.query('gov', 'proposals');
+  let { proposals } = await agd.query('gov', 'proposals');
   if (title) {
-    proposalsData = proposalsData.filter(proposal => {
+    proposals = proposals.filter(proposal => {
       if (proposal.content) {
         return proposal.content.title === title;
       } else if (proposal.messages) {
         return proposal.messages.some(message => {
           message['@type'] === '/cosmos.gov.v1.MsgExecLegacyContent' ||
             Fail`Unsupported proposal message type ${message['@type']}`;
-          return proposal.content.title === title;
+          return message.content.title === title;
         });
       } else {
         Fail`Unrecognized proposal shape ${Object.keys(proposal)}`;
       }
     });
   }
-  let lastProposal = proposalsData.proposals.at(-1);
+  let lastProposal = proposals.at(-1);
 
   lastProposal || Fail`No proposal found`;
 
