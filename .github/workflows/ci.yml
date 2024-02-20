@@ -53,6 +53,10 @@ jobs:
         run: yarn tsc
         working-directory: packages/synthetic-chain
 
+      - name: Test
+        run: yarn test
+        working-directory: packages/synthetic-chain
+
   # see https://docs.docker.com/build/ci/github-actions/test-before-push/
   test-proposals:
     permissions:
