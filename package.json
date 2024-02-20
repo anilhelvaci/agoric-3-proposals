@@ -4,8 +4,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "yarn synthetic-chain build",
-    "test": "yarn synthetic-chain test",
+    "build-cli": "cd packages/synthetic-chain && yarn build --silent",
+    "build": "yarn build-cli && synthetic-chain build",
+    "test": "yarn build-cli && synthetic-chain test",
     "format": "prettier --write ."
   },
   "dependencies": {
