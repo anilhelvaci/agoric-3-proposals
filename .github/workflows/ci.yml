@@ -40,7 +40,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup
+      - name: Install deps
         run: |
           # Enable corepack for packageManager config
           corepack enable || sudo corepack enable
@@ -102,16 +102,15 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build @agoric/synthetic-chain
+      - name: Install deps
         run: |
           # Enable corepack for packageManager config
           corepack enable || sudo corepack enable
           yarn install
-          yarn build
-        working-directory: packages/synthetic-chain
 
       - name: Prepare Docker config
         run: |
+          yarn build-cli
           # prepare files for bake-action
           yarn synthetic-chain prepare-build
 
