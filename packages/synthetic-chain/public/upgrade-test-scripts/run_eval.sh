@@ -24,10 +24,8 @@ else
     # newer proposals declare a submission
     echo "[$PROPOSAL] Running proposal declared in package.json"
     # copy to run in the proposal package so the dependencies can be resolved
-    cp /usr/src/upgrade-test-scripts/eval_submission.ts .
-    # eval_submission doesn't really need to be .ts but it imports .ts files
-    which tsx || npm install --global tsx
-    ./eval_submission.ts
+    cp /usr/src/upgrade-test-scripts/eval_submission.js .
+    ./eval_submission.js
 fi
 
 echo "[$PROPOSAL] Eval completed. Running 10 blocks and exiting."

@@ -1,6 +1,3 @@
-#!/usr/bin/env tsx
-// @ts-check
-
 import fs from 'node:fs';
 import {
   type CoreEvalProposal,

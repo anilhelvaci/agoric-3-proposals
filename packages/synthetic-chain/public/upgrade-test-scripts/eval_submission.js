@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 
 import { evalBundles } from '@agoric/synthetic-chain';
 

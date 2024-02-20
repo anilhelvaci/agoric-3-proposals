@@ -1,5 +1,7 @@
-#!/usr/bin/env tsx
-
+#!/usr/bin/env node
+/**
+ * @file CLI entrypoint, transpiled during build so Node is the env to run it in
+ */
 import chalk from 'chalk';
 import assert from 'node:assert';
 import { execSync } from 'node:child_process';
