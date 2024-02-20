@@ -40,6 +40,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          # 18.19 causes this problem running tsx:
+          # The --loader flag was deprecated in Node v20.6.0
+          node-version: 18.18
+
       - name: Install deps
         run: |
           # Enable corepack for packageManager config
