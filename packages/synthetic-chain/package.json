@@ -16,6 +16,9 @@
     "build": "tsup",
     "test": "NODE_OPTIONS='--loader=tsx --no-warnings' ava"
   },
+  "engines": {
+    "node": "^18.19 || ^20.9"
+  },
   "dependencies": {
     "@endo/zip": "^1.0.1",
     "better-sqlite3": "^9.4.0",
