@@ -9,6 +9,5 @@ import test from 'ava';
 
 test.serial('build-proposal', t => {
   t.log('initial');
-  t.log('process', process.execArgv);
   t.pass();
 });
