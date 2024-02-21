@@ -5,6 +5,8 @@
   "type": "module",
   "license": "Apache-2.0",
   "dependencies": {
+    "@agoric/deploy-script-support": "latest",
+    "@agoric/inter-protocol": "latest",
     "@agoric/synthetic-chain": "^0.0.1-rc0",
     "@endo/zip": "^0.2.35",
     "ava": "^5.3.1",
