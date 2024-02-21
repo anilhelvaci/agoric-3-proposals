@@ -60,6 +60,23 @@ export const runDoctor = (proposals: ProposalInfo[]) => {
   }
   console.log(yarnpath);
 
+  console.log('Verifying the CLI runs and create the Dockerfiles');
+  execSync('yarn synthetic-chain prepare-build', { stdio: 'inherit' });
+
+  console.log(
+    'Verifying the install Docker Buildx is new enough to handle the Bake file',
+  );
+  try {
+    execSync('docker buildx bake --print');
+  } catch (e: any) {
+    console.error('Docker Buildx version is too old');
+    execSync('docker buildx version', { stdio: 'inherit' });
+    console.log(
+      'It must be at least 0.11. https://docs.docker.com/build/release-notes/#0110',
+    );
+    process.exit(1);
+  }
+
   for (const proposal of proposals) {
     try {
       console.log('\nchecking proposal', proposal.proposalName, '...');
