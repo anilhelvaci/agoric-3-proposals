@@ -31,6 +31,11 @@ export type CoreEvalProposal = ProposalCommon & {
 export type ProposalInfo = SoftwareUpgradeProposal | CoreEvalProposal;
 
 function readInfo(proposalPath: string): ProposalInfo {
+  assert(
+    proposalPath === proposalPath.toLowerCase(),
+    // because they go in Dockerfile target names
+    'proposal directories must be lowercase',
+  );
   const packageJsonPath = path.join('proposals', proposalPath, 'package.json');
   const packageJson = fs.readFileSync(packageJsonPath, 'utf-8');
   const { agoricProposal } = JSON.parse(packageJson);
