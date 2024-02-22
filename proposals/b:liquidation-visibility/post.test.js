@@ -1,4 +1,6 @@
 import test from 'ava';
+import { executeCommand } from "../../packages/synthetic-chain/src/lib/cliHelper.js";
+import fs from 'fs';
 
 /**
  * 1. Add new collateral manager
@@ -7,8 +9,13 @@ import test from 'ava';
  * 4. Trigger liquidation
  */
 
-test.serial('build-proposal', t => {
-  t.log('initial');
-  t.log('process', process.execArgv);
+test.serial('build-proposal', async t => {
+  const dstPath = '/usr/src/agoric-sdk/packages/inter-protocol/scripts/add-STARS.js';
+  if (!fs.existsSync(dstPath)) {
+    fs.copyFileSync('./add-STARS.js', dstPath);
+  }
+
+  await executeCommand('agoric run', [dstPath]);
+
   t.pass();
 });
