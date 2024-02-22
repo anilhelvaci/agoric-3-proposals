@@ -26,11 +26,12 @@ import {
   makeFileRW,
 } from '@agoric/synthetic-chain/src/lib/webAsset.js';
 import {
-  ensureISTForInstall, getContractInfo,
+  ensureISTForInstall, flags, getContractInfo,
   loadedBundleIds,
   testIncludes,
   txAbbr
 } from './core-eval-support.js';
+import { voteLatestProposalAndWait, waitForBlock } from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
 
 /** @typedef {Awaited<ReturnType<typeof makeTestContext>>} TestContext */
 /** @type {import('ava').TestFn<TestContext>}} */
@@ -61,6 +62,26 @@ const staticConfig = {
   swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
   buildInfo: Object.values(assetInfo.buildAssets),
   initialCoins: `20000000ubld`,
+  accounts: {
+    mem1: {
+      impersonate: 'agoric1ag5a8lhn00h4u9h2shpfpjpaq6v4kku54zk69m',
+      address: 'agoric1s32tu4wtkqc5440p0uf0hk508nerfmunr65vtl',
+      mnemonic:
+        'rival find chest wall myself guess fat hint frozen shed cake theme harbor physical bleak tube large desk cream increase scrap virus top bulb',
+    },
+    mem2: {
+      impersonate: 'agoric140y0mqnq7ng5vvxxwpfe67988e5vqar9whg309',
+      address: 'agoric1xdu48rxgakk5us7m3wud04pf92kzjmhwllzdef',
+      mnemonic:
+        'orient tag produce jar expect travel consider zero flight pause rebuild rent blanket yellow siege ivory hidden loop unlock dream priority prevent horn load',
+    },
+    mem3: {
+      impersonate: 'agoric1wqfu6hu5q2qtey9jtjapaae4df9zd492z4448k',
+      address: 'agoric1hmdue96vs0p6zj42aa26x6zrqlythpxnvgsgpr',
+      mnemonic:
+        'seven regular giggle castle universe find secret like inquiry round write pumpkin risk exhaust dress grab host message carbon student put kind gold treat',
+    },
+  },
   ...dappAPI,
 };
 
@@ -217,3 +238,78 @@ test.serial('ensure bundles installed', async t => {
   }
   t.is(todo, done);
 });
+
+/**
+ * @param {string} text
+ * @param {string} fileName
+ */
+const acctSub = (text, fileName) => {
+  let out = text;
+  for (const [name, detail] of Object.entries(staticConfig.accounts)) {
+    if (out.includes(detail.impersonate)) {
+      console.log('impersonating', name, 'in', fileName);
+      out = out.replace(detail.impersonate, detail.address);
+    }
+  }
+  return out;
+};
+
+test.serial('core eval proposal passes', async t => {
+  const { agd, swingstore, config, mkTempRW, src } = t.context;
+  const from = agd.lookup(config.proposer);
+  const { chainId, deposit, instance } = config;
+  const info = { title: instance, description: `start ${instance}` };
+  t.log('submit proposal', instance);
+
+  // double-check that bundles are loaded
+  const loaded = loadedBundleIds(swingstore);
+  const { buildInfo } = staticConfig;
+  for (const { bundles } of buildInfo) {
+    for (const bundle of bundles) {
+      const { id } = await bundleDetail(src, bundle);
+      testIncludes(t, id, loaded, 'loaded bundles');
+    }
+  }
+
+  /** @param {string} script */
+  const withKnownKeys = async script => {
+    const file = src.join(script);
+    const text = await file.readText();
+    const text2 = acctSub(text, script);
+    const out = await mkTempRW(script);
+    await out.writeText(text2);
+    return out.toString();
+  };
+
+  const evalNames = buildInfo
+    .map(({ evals }) => evals)
+    .flat()
+    .map(e => [e.permit, e.script])
+    .flat();
+  const evalPaths = await Promise.all(evalNames.map(withKnownKeys));
+  t.log(evalPaths);
+  console.log('await tx', evalPaths);
+  const result = await agd.tx(
+    [
+      'gov',
+      'submit-proposal',
+      'swingset-core-eval',
+      ...evalPaths,
+      ...flags({ ...info, deposit }),
+      ...flags({ gas: 'auto', 'gas-adjustment': '1.2' }),
+    ],
+    { from, chainId, yes: true },
+  );
+  console.log('RESULT', { result });
+  t.log(txAbbr(result));
+  t.is(result.code, 0);
+
+  console.log('await voteLatestProposalAndWait', evalPaths);
+  const detail = await voteLatestProposalAndWait();
+  t.log(detail.proposal_id, detail.voting_end_time, detail.status);
+
+  // XXX https://github.com/Agoric/agoric-3-proposals/issues/91
+  await waitForBlock(15);
+
+  t.is(detail.status, 'PROPOSAL_STATUS_PASSED');
+})
