@@ -10,9 +10,55 @@ import { Fail, NonNullish } from '@agoric/synthetic-chain/src/lib/assert.js';
 // or at least allow caller to supply authority.
 import { mintIST } from '@agoric/synthetic-chain/src/lib/econHelpers.js';
 import { agoric } from '@agoric/synthetic-chain/src/lib/cliHelper.js';
+import processAmbient from "process";
+import cpAmbient from "child_process";
+import dbOpenAmbient from "better-sqlite3";
+import fspAmbient from "fs/promises";
+import pathAmbient from "path";
+import { tmpName as tmpNameAmbient } from "tmp";
+import { makeFileRd, makeFileRW } from "@agoric/synthetic-chain/src/lib/webAsset.js";
+import { makeAgd } from "@agoric/synthetic-chain/src/lib/agd-lib.js";
+import { dbTool } from "@agoric/synthetic-chain/src/lib/vat-status.js";
+import { waitForBlock } from "@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js";
+
+export const makeTestContext = async ({ io = {}, testConfig, srcDir = 'assets' }) => {
+  const {
+    process: { env, cwd } = processAmbient,
+    child_process: { execFileSync } = cpAmbient,
+    dbOpen = dbOpenAmbient,
+    fsp = fspAmbient,
+    path = pathAmbient,
+    tmpName = tmpNameAmbient,
+  } = io;
+
+  const src = makeFileRd(`${cwd()}/${srcDir}`, { fsp, path });
+  const tmpNameP = prefix =>
+    new Promise((resolve, reject) =>
+      tmpName({ prefix }, (err, x) => (err ? reject(err) : resolve(x))),
+    );
+
+  const config = {
+    chainId: 'agoriclocal',
+    ...testConfig,
+  };
+
+  // This agd API is based on experience "productizing"
+  // the inter bid CLI in #7939
+  const agd = makeAgd({ execFileSync: execFileSync }).withOpts({
+    keyringBackend: 'test',
+  });
+
+  const dbPath = testConfig.swingstorePath.replace(/^~/, env.HOME);
+  const swingstore = dbTool(dbOpen(dbPath, { readonly: true }));
+
+  /* @param {string} baseName */
+  const mkTempRW = async baseName =>
+    makeFileRW(await tmpNameP(baseName), { fsp, path });
+  return { agd, agoric, swingstore, config, mkTempRW, src };
+};
 
 // move to unmarshal.js?
-const makeBoardUnmarshal = () => {
+export const makeBoardUnmarshal = () => {
   const synthesizeRemotable = (_slot, iface) =>
     Far(iface.replace(/^Alleged: /, ''), {});
 
@@ -148,4 +194,38 @@ export const ensureISTForInstall = async (agd, config, bytes, { log }) => {
   );
   log({ wantMinted });
   await mintIST(addr, sendValue, wantMinted, giveCollateral);
+};
+
+/** @param {number[]} xs */
+export const sum = xs => xs.reduce((a, b) => a + b, 0);
+
+export const getFileSize = async (src, fileName) => {
+  const file = src.join(fileName);
+  const { size } = await file.stat();
+  return size;
+};
+
+/** @param {import('./lib/webAsset.js').FileRd} src
+ * @param config
+ */
+export const readBundleSizes = async (src, config) => {
+  const info = config.buildInfo;
+  const bundleSizes = await Promise.all(
+    info
+      .map(({ bundles }) =>
+        bundles.map(bundleName => getFileSize(src, bundleName)),
+      )
+      .flat(),
+  );
+  const totalSize = sum(bundleSizes);
+  return { bundleSizes, totalSize };
+};
+
+export const poll = async (check, maxTries) => {
+  for (let tries = 0; tries < maxTries; tries += 1) {
+    const ok = await check();
+    if (ok) return;
+    await waitForBlock();
+  }
+  throw Error(`tried ${maxTries} times without success`);
 };
