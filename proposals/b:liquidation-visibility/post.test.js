@@ -1,13 +1,18 @@
 import test from 'ava';
-import { executeCommand } from "../../packages/synthetic-chain/src/lib/cliHelper.js";
+import { executeCommand, agoric, agops } from "../../packages/synthetic-chain/src/lib/cliHelper.js";
 import fs from 'fs';
 import {
   bundleDetail,
-  ensureISTForInstall, flags, getContractInfo,
-  loadedBundleIds, makeBoardUnmarshal,
-  makeTestContext, poll,
+  ensureISTForInstall,
+  flags,
+  getContractInfo,
+  loadedBundleIds,
+  makeBoardUnmarshal,
+  makeTestContext,
+  poll,
   readBundleSizes,
-  testIncludes, txAbbr
+  testIncludes,
+  txAbbr
 } from "./core-eval-support.js";
 import { voteLatestProposalAndWait, waitForBlock } from "@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js";
 
@@ -50,6 +55,9 @@ const staticConfig = {
   swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
   buildInfo: Object.values(assetInfo.buildAssets),
   initialCoins: `20000000ubld`,
+  oracles: {
+
+  }
 };
 
 test.before(async t => (t.context = await makeTestContext({
@@ -190,7 +198,7 @@ test.serial('core eval proposal passes', async t => {
   t.is(detail.status, 'PROPOSAL_STATUS_PASSED');
 })
 
-test.serial.only('STARS is added as a collateral', async t => {
+test.serial('STARS is added as a collateral', async t => {
   const { agd } = t.context;
 
   const checkForData = async () => {
@@ -216,4 +224,105 @@ test.serial.only('STARS is added as a collateral', async t => {
   const name = collaterals[collaterals.length - 1][Symbol.toStringTag].split(' ')[0];
   t.log({ name });
   t.is('STARS', name);
+});
+
+test.serial('accept oracle invitations', async t => {
+  /**
+   * @param {string} addressName
+   */
+  const acceptInvitation = async addressName => {
+    const now = Date.now();
+    try {
+      await agops.oracle([
+        'accept',
+        '--offerId',
+        '1', // Randomize
+        '--pair',
+        'STARS.USD',
+        '>',
+        `/tmp/offer-${now}-w1.json` // Use offer id to randomize
+      ]);
+
+      await agoric.wallet([
+        'send',
+        '--from',
+        addressName,
+        '--offer',
+        `/tmp/offer-${now}-w1.json`, // Use offer id to randomize
+        '--keyring-backend=test',
+      ]);
+    } catch (e) {
+      t.fail(e);
+    }
+  }
+
+  await Promise.all([
+    acceptInvitation('gov1'),
+    acceptInvitation('gov2'),
+  ]);
+
+  // Wait 5 blocks
+  await waitForBlock(5);
+  t.pass();
+});
+
+test.serial.only('push initial prices', async t => {
+  const { agd } = t.context;
+  /**
+   *
+   * @param {string} price
+   * @param {string} round
+   * @param {string} offerId
+   * @param {string} addressName
+   */
+  const pushPrice = async (price, round, offerId, addressName) => {
+    try {
+      await agops.oracle([
+        'pushPriceRound',
+        '--price',
+        price,
+        '--roundId',
+        round,
+        '--oracleAdminAcceptOfferId',
+        offerId,
+        '>',
+        '/tmp/price-offer-1-w1.json' // Use offer id to randomize
+      ]);
+
+      await agoric.wallet([
+        'send',
+        '--from',
+        addressName,
+        '--offer',
+        '/tmp/price-offer-1-w1.json', // Use offer id to randomize
+        '--keyring-backend=test',
+      ]);
+    } catch (e) {
+      t.fail(e);
+    }
+  }
+
+  const checkForData = async () => {
+    const m = makeBoardUnmarshal();
+    const data = await agd.query([
+      'vstorage',
+      'data',
+      'published.priceFeed.STARS-USD_price_feed.latestRound',
+    ]);
+    const { values } = JSON.parse(data.value);
+    const { body, slots } = JSON.parse(values[0]);
+    const result =  m.fromCapData({ body, slots });
+    return result;
+  };
+  const result = await checkForData();
+  t.log({ result })
+
+  // await Promise.all([
+  //   pushPrice('12.34','1' ,'1', 'gov1'),
+  //   pushPrice('12.34','1' ,'1','gov2'),
+  // ]);
+
+  // Wait 5 blocks
+  // await waitForBlock(5);
+  t.pass();
 });
