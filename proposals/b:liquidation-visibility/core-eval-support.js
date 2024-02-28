@@ -155,7 +155,7 @@ const getPriceRound = async () => {
  *
  * @param t
  * @param price
- * @param {Array<{address, prevId}>} oracles
+ * @param {Array<{address, acceptId}>} oracles
  * @return {Promise<void>}
  */
 export const pushPrice = async (t, price, oracles) => {
@@ -186,11 +186,11 @@ export const pushPrice = async (t, price, oracles) => {
   };
 
   const offersPs = [];
-  for (const { address, prevId } of oracles) {
+  for (const { address, acceptId } of oracles) {
     offersPs.push(
       agopsOffer({
-          t,
-         agopsParams: buildAgopsArgs(prevId),
+         t,
+         agopsParams: buildAgopsArgs(acceptId),
          txParams: buildOfferArgs(address),
          src: tmpRW,
          from: address
@@ -200,5 +200,30 @@ export const pushPrice = async (t, price, oracles) => {
   }
 
   await Promise.all(offersPs);
+  await waitForBlock(5);
+};
+
+export const acceptsOracleInvitations = async (t, oracles) => {
+  const { mkTempRW } = t.context;
+  const tmpRW = await mkTempRW('acceptInvites');
+
+  const buildAgopsParams = (id = Date.now()) => {
+    return ['accept', '--offerId', id, '--pair', 'STARS.USD'];
+  };
+
+  const buildOfferParams = from => {
+    return ['send', '--from', from, '--keyring-backend=test'];
+  };
+
+  const offersP = [];
+  for (const { address, acceptId } of oracles) {
+    offersP.push(
+      agopsOffer({ t, agopsParams: buildAgopsParams(acceptId), txParams: buildOfferParams(address), from: address, src: tmpRW}),
+    )
+  }
+
+  await Promise.all(offersP);
+
+  // Wait 5 blocks
   await waitForBlock(5);
 };

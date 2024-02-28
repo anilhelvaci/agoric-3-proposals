@@ -13,7 +13,7 @@ import {
 } from "@agoric/synthetic-chain";
 import fs from 'fs';
 import {
-  agopsOffer, getStorageChildren,
+  acceptsOracleInvitations,
   makeTestContext,
   poll, pushPrice,
   readBundleSizes,
@@ -58,9 +58,10 @@ const staticConfig = {
   swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
   buildInfo: Object.values(assetInfo.buildAssets),
   initialCoins: `20000000ubld`,
-  oracles: {
-
-  }
+  oracles: [
+    { address: 'gov1', acceptId: 'gov1-accept-invite'},
+    { address: 'gov2', acceptId: 'gov2-accept-invite'},
+  ]
 };
 
 test.before(async t => (t.context = await makeTestContext({
@@ -214,74 +215,13 @@ test.serial('STARS is added as a collateral', async t => {
 });
 
 test.serial('accept oracle invitations', async t => {
-  const { mkTempRW } = t.context;
-  const tmpRW = await mkTempRW('acceptInvites');
-
-  const buildAgopsParams = (id = Date.now()) => {
-    return ['accept', '--offerId', id, '--pair', 'STARS.USD'];
-  };
-
-  const buildOfferParams = from => {
-    return ['send', '--from', from, '--keyring-backend=test'];
-  };
-
-  await Promise.all([
-    agopsOffer({ t, agopsParams: buildAgopsParams(), txParams: buildOfferParams('gov1'), from: 'gov1', src: tmpRW}),
-    agopsOffer({ t, agopsParams: buildAgopsParams(), txParams: buildOfferParams('gov2'), from: 'gov2', src: tmpRW}),
-  ]);
-
-  // Wait 5 blocks
-  await waitForBlock(5);
+  await acceptsOracleInvitations(t, staticConfig.oracles);
   t.pass();
 });
 
 test.serial.only('push initial prices', async t => {
-  const { agops } = t.context;
-  /**
-   *
-   * @param {string} price
-   * @param {string} round
-   * @param {string} offerId
-   * @param {string} addressName
-   */
-  // const pushPrice = async (price, round, offerId, addressName) => {
-  //   try {
-  //     await agops.oracle([
-  //       'pushPriceRound',
-  //       '--price',
-  //       price,
-  //       '--roundId',
-  //       round,
-  //       '--oracleAdminAcceptOfferId',
-  //       offerId,
-  //       '>',
-  //       '/tmp/price-offer-1-w1.json' // Use offer id to randomize
-  //     ]);
-  //
-  //     await agoric.wallet([
-  //       'send',
-  //       '--from',
-  //       addressName,
-  //       '--offer',
-  //       '/tmp/price-offer-1-w1.json', // Use offer id to randomize
-  //       '--keyring-backend=test',
-  //     ]);
-  //   } catch (e) {
-  //     t.fail(e);
-  //   }
-  // }
+  await pushPrice(t, '12.34', staticConfig.oracles);
 
-  // await Promise.all([
-  //   pushPrice('12.34','1' ,'1', 'gov1'),
-  //   pushPrice('12.34','1' ,'1','gov2'),
-  // ]);
-  const oracles = [
-      { address: 'gov1', prevId: '1709120620169' },
-      { address: 'gov2', prevId: '1709120620169' },
-  ]
-  // await pushPrice(t, '12.34', oracles);
-
-  const data = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
-  console.log({ data });
-  t.pass();
+  const { roundId } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
+  t.is(roundId, 1n);
 });
