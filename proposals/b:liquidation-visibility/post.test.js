@@ -219,7 +219,7 @@ test.serial('accept oracle invitations', async t => {
   t.pass();
 });
 
-test.serial.only('push initial prices', async t => {
+test.serial('push initial prices', async t => {
   await pushPrice(t, '12.34', staticConfig.oracles);
 
   const { roundId } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
