@@ -1,20 +1,23 @@
 import test from 'ava';
-import { executeCommand, agoric, agops } from "../../packages/synthetic-chain/src/lib/cliHelper.js";
-import fs from 'fs';
 import {
+  executeCommand,
+  agoric,
+  voteLatestProposalAndWait,
+  waitForBlock, getContractInfo,
+  loadedBundleIds,
   bundleDetail,
   ensureISTForInstall,
-  flags,
-  getContractInfo,
-  loadedBundleIds,
-  makeBoardUnmarshal,
-  makeTestContext,
-  poll,
-  readBundleSizes,
   testIncludes,
-  txAbbr
+  flags,
+  txAbbr,
+} from "@agoric/synthetic-chain";
+import fs from 'fs';
+import {
+  agopsOffer, getStorageChildren,
+  makeTestContext,
+  poll, pushPrice,
+  readBundleSizes,
 } from "./core-eval-support.js";
-import { voteLatestProposalAndWait, waitForBlock } from "@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js";
 
 /**
  * 1. Add new collateral manager
@@ -107,7 +110,7 @@ test.serial('ensure enough IST to install bundles', async t => {
 });
 
 test.serial('ensure bundles installed', async t => {
-  const { agd, swingstore, agoric, config, io, src } = t.context;
+  const { agd, swingstore, agoric, config } = t.context;
   const { chainId } = config;
   const loaded = loadedBundleIds(swingstore);
   const from = agd.lookup(config.installer);
@@ -147,7 +150,7 @@ test.serial('ensure bundles installed', async t => {
 });
 
 test.serial('core eval proposal passes', async t => {
-  const { agd, swingstore, config, mkTempRW, src } = t.context;
+  const { agd, swingstore, config, src } = t.context;
   const from = agd.lookup(config.proposer);
   const { chainId, deposit, instance } = config;
   const info = { title: instance, description: `start ${instance}` };
@@ -199,66 +202,32 @@ test.serial('core eval proposal passes', async t => {
 })
 
 test.serial('STARS is added as a collateral', async t => {
-  const { agd } = t.context;
-
-  const checkForData = async () => {
-    const m = makeBoardUnmarshal();
-    const data = await agd.query([
-      'vstorage',
-      'data',
-      'published.vaultFactory.metrics',
-    ]);
-    const { values } = JSON.parse(data.value);
-    const { body, slots } = JSON.parse(values[0]);
-    const result =  m.fromCapData({ body, slots });
-    console.log({
-      result
-    })
-    return result;
-  };
+  const { agoric } = t.context;
 
   // contract initialization took ~10min in mainnet
-  await poll(checkForData, 15 * 60); // 15 mins
+  await poll(() => getContractInfo('vaultFactory.metrics', { agoric }), 15 * 60); // 15 mins
 
-  const { collaterals } = await checkForData();
+  const { collaterals } = await getContractInfo('vaultFactory.metrics', { agoric });
   const name = collaterals[collaterals.length - 1][Symbol.toStringTag].split(' ')[0];
   t.log({ name });
   t.is('STARS', name);
 });
 
 test.serial('accept oracle invitations', async t => {
-  /**
-   * @param {string} addressName
-   */
-  const acceptInvitation = async addressName => {
-    const now = Date.now();
-    try {
-      await agops.oracle([
-        'accept',
-        '--offerId',
-        '1', // Randomize
-        '--pair',
-        'STARS.USD',
-        '>',
-        `/tmp/offer-${now}-w1.json` // Use offer id to randomize
-      ]);
+  const { mkTempRW } = t.context;
+  const tmpRW = await mkTempRW('acceptInvites');
 
-      await agoric.wallet([
-        'send',
-        '--from',
-        addressName,
-        '--offer',
-        `/tmp/offer-${now}-w1.json`, // Use offer id to randomize
-        '--keyring-backend=test',
-      ]);
-    } catch (e) {
-      t.fail(e);
-    }
-  }
+  const buildAgopsParams = (id = Date.now()) => {
+    return ['accept', '--offerId', id, '--pair', 'STARS.USD'];
+  };
+
+  const buildOfferParams = from => {
+    return ['send', '--from', from, '--keyring-backend=test'];
+  };
 
   await Promise.all([
-    acceptInvitation('gov1'),
-    acceptInvitation('gov2'),
+    agopsOffer({ t, agopsParams: buildAgopsParams(), txParams: buildOfferParams('gov1'), from: 'gov1', src: tmpRW}),
+    agopsOffer({ t, agopsParams: buildAgopsParams(), txParams: buildOfferParams('gov2'), from: 'gov2', src: tmpRW}),
   ]);
 
   // Wait 5 blocks
@@ -267,7 +236,7 @@ test.serial('accept oracle invitations', async t => {
 });
 
 test.serial.only('push initial prices', async t => {
-  const { agd } = t.context;
+  const { agops } = t.context;
   /**
    *
    * @param {string} price
@@ -275,54 +244,44 @@ test.serial.only('push initial prices', async t => {
    * @param {string} offerId
    * @param {string} addressName
    */
-  const pushPrice = async (price, round, offerId, addressName) => {
-    try {
-      await agops.oracle([
-        'pushPriceRound',
-        '--price',
-        price,
-        '--roundId',
-        round,
-        '--oracleAdminAcceptOfferId',
-        offerId,
-        '>',
-        '/tmp/price-offer-1-w1.json' // Use offer id to randomize
-      ]);
-
-      await agoric.wallet([
-        'send',
-        '--from',
-        addressName,
-        '--offer',
-        '/tmp/price-offer-1-w1.json', // Use offer id to randomize
-        '--keyring-backend=test',
-      ]);
-    } catch (e) {
-      t.fail(e);
-    }
-  }
-
-  const checkForData = async () => {
-    const m = makeBoardUnmarshal();
-    const data = await agd.query([
-      'vstorage',
-      'data',
-      'published.priceFeed.STARS-USD_price_feed.latestRound',
-    ]);
-    const { values } = JSON.parse(data.value);
-    const { body, slots } = JSON.parse(values[0]);
-    const result =  m.fromCapData({ body, slots });
-    return result;
-  };
-  const result = await checkForData();
-  t.log({ result })
+  // const pushPrice = async (price, round, offerId, addressName) => {
+  //   try {
+  //     await agops.oracle([
+  //       'pushPriceRound',
+  //       '--price',
+  //       price,
+  //       '--roundId',
+  //       round,
+  //       '--oracleAdminAcceptOfferId',
+  //       offerId,
+  //       '>',
+  //       '/tmp/price-offer-1-w1.json' // Use offer id to randomize
+  //     ]);
+  //
+  //     await agoric.wallet([
+  //       'send',
+  //       '--from',
+  //       addressName,
+  //       '--offer',
+  //       '/tmp/price-offer-1-w1.json', // Use offer id to randomize
+  //       '--keyring-backend=test',
+  //     ]);
+  //   } catch (e) {
+  //     t.fail(e);
+  //   }
+  // }
 
   // await Promise.all([
   //   pushPrice('12.34','1' ,'1', 'gov1'),
   //   pushPrice('12.34','1' ,'1','gov2'),
   // ]);
+  const oracles = [
+      { address: 'gov1', prevId: '1709120620169' },
+      { address: 'gov2', prevId: '1709120620169' },
+  ]
+  // await pushPrice(t, '12.34', oracles);
 
-  // Wait 5 blocks
-  // await waitForBlock(5);
+  const data = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
+  console.log({ data });
   t.pass();
 });
