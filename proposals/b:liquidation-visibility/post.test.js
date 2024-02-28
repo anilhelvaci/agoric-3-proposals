@@ -225,3 +225,7 @@ test.serial.only('push initial prices', async t => {
   const { roundId } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
   t.is(roundId, 1n);
 });
+
+test.todo('open vaults');
+test.todo('trigger liquidation');
+test.todo('check visibility');
