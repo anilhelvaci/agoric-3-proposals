@@ -228,6 +228,7 @@ test.serial('push initial prices', async t => {
 
 test.todo('open vaults');
 test.todo('trigger liquidation');
+test.todo('run liquidation');
 test.todo('check visibility'); // How long the auction is going to take?
 test.skip('vstorage check', async t => {
   const { agoric } = t.context;
