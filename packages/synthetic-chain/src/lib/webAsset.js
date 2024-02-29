@@ -1,5 +1,3 @@
-// @ts-check
-
 const dbg = label => x => {
   label;
   // console.log(label, x);

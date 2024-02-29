@@ -5,6 +5,7 @@ import * as path from 'node:path';
 export const repository = 'ghcr.io/agoric/agoric-3-proposals';
 
 type ProposalCommon = {
+  path: string; // in the proposals directory
   proposalName: string;
   proposalIdentifier: string;
 };
@@ -30,6 +31,11 @@ export type CoreEvalProposal = ProposalCommon & {
 export type ProposalInfo = SoftwareUpgradeProposal | CoreEvalProposal;
 
 function readInfo(proposalPath: string): ProposalInfo {
+  assert(
+    proposalPath === proposalPath.toLowerCase(),
+    // because they go in Dockerfile target names
+    'proposal directories must be lowercase',
+  );
   const packageJsonPath = path.join('proposals', proposalPath, 'package.json');
   const packageJson = fs.readFileSync(packageJsonPath, 'utf-8');
   const { agoricProposal } = JSON.parse(packageJson);
@@ -38,6 +44,7 @@ function readInfo(proposalPath: string): ProposalInfo {
   const [proposalIdentifier, proposalName] = proposalPath.split(':');
   return {
     ...agoricProposal,
+    path: proposalPath,
     proposalIdentifier,
     proposalName,
   };
@@ -66,17 +73,6 @@ export function readProposals(proposalsParent: string): ProposalInfo[] {
     .map(dirent => dirent.name);
   return proposalPaths.map(readInfo);
 }
-
-export const matchOneProposal = (
-  allProposals: ProposalInfo[],
-  match: string,
-) => {
-  const proposals = allProposals.filter(p => p.proposalName.includes(match));
-
-  assert(proposals.length > 0, 'no proposals match');
-  assert(proposals.length === 1, 'too many proposals match');
-  return proposals[0];
-};
 
 export function imageNameForProposal(
   proposal: Pick<ProposalCommon, 'proposalName'>,

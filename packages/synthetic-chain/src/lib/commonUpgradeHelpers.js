@@ -1,7 +1,6 @@
-// @ts-expect-error XXX execa typedef
 import { $ } from 'execa';
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import fsp from 'node:fs/promises';
+import * as path from 'node:path';
 import { agd, agoric, agops } from './cliHelper.js';
 import { CHAINID, HOME, VALIDATORADDR } from './constants.js';
 
@@ -121,7 +120,7 @@ export const calculateWalletState = async addr => {
 export const executeOffer = async (address, offerPromise) => {
   const offerPath = await mkTemp('agops.XXX');
   const offer = await offerPromise;
-  await fs.writeFile(offerPath, offer);
+  await fsp.writeFile(offerPath, offer);
 
   await agops.perf(
     'satisfaction',
@@ -139,33 +138,63 @@ export const getUser = async user => {
 
 export const addUser = async user => {
   const userKeyData = await agd.keys('add', user, '--keyring-backend=test');
-  await fs.writeFile(`${HOME}/.agoric/${user}.key`, userKeyData.mnemonic);
+  await fsp.writeFile(`${HOME}/.agoric/${user}.key`, userKeyData.mnemonic);
 
   const userAddress = await getUser(user);
   return userAddress;
 };
 
-export const voteLatestProposalAndWait = async () => {
+/**
+ * @params {string} [title]
+ * @returns {Promise<{ proposal_id: string, voting_end_time: unknown, status: string }>}
+ */
+export const voteLatestProposalAndWait = async title => {
   await waitForBlock();
-  const proposalsData = await agd.query('gov', 'proposals');
-  const lastProposalId = proposalsData.proposals.at(-1).proposal_id;
+  let { proposals } = await agd.query('gov', 'proposals');
+  if (title) {
+    proposals = proposals.filter(proposal => {
+      if (proposal.content) {
+        return proposal.content.title === title;
+      } else if (proposal.messages) {
+        return proposal.messages.some(message => {
+          message['@type'] === '/cosmos.gov.v1.MsgExecLegacyContent' ||
+            Fail`Unsupported proposal message type ${message['@type']}`;
+          return message.content.title === title;
+        });
+      } else {
+        Fail`Unrecognized proposal shape ${Object.keys(proposal)}`;
+      }
+    });
+  }
+  let lastProposal = proposals.at(-1);
 
-  await waitForBlock();
+  lastProposal || Fail`No proposal found`;
 
-  await agd.tx(
-    'gov',
-    'deposit',
-    lastProposalId,
-    '50000000ubld',
-    '--from',
-    VALIDATORADDR,
-    `--chain-id=${CHAINID}`,
-    '--yes',
-    '--keyring-backend',
-    'test',
-  );
+  const lastProposalId = lastProposal.proposal_id || lastProposal.id;
 
-  await waitForBlock();
+  lastProposalId || Fail`Invalid proposal ${lastProposal}`;
+
+  if (lastProposal.status === 'PROPOSAL_STATUS_DEPOSIT_PERIOD') {
+    await agd.tx(
+      'gov',
+      'deposit',
+      lastProposalId,
+      '50000000ubld',
+      '--from',
+      VALIDATORADDR,
+      `--chain-id=${CHAINID}`,
+      '--yes',
+      '--keyring-backend',
+      'test',
+    );
+
+    await waitForBlock();
+
+    lastProposal = await agd.query('gov', 'proposal', lastProposalId);
+  }
+
+  lastProposal.status === 'PROPOSAL_STATUS_VOTING_PERIOD' ||
+    Fail`Latest proposal ${lastProposalId} not in voting period (status=${lastProposal.status})`;
 
   await agd.tx(
     'gov',
@@ -180,19 +209,19 @@ export const voteLatestProposalAndWait = async () => {
     'test',
   );
 
-  let info = {};
   for (
     ;
-    info.status !== 'PROPOSAL_STATUS_REJECTED' &&
-    info.status !== 'PROPOSAL_STATUS_PASSED';
+    lastProposal.status !== 'PROPOSAL_STATUS_PASSED' &&
+    lastProposal.status !== 'PROPOSAL_STATUS_REJECTED' &&
+    lastProposal.status !== 'PROPOSAL_STATUS_FAILED';
     await waitForBlock()
   ) {
-    info = await agd.query('gov', 'proposal', lastProposalId);
+    lastProposal = await agd.query('gov', 'proposal', lastProposalId);
     console.log(
-      `Waiting for proposal ${lastProposalId} to pass (status=${info.status})`,
+      `Waiting for proposal ${lastProposalId} to pass (status=${lastProposal.status})`,
     );
   }
-  return info;
+  return { proposal_id: lastProposalId, ...lastProposal };
 };
 
 const Fail = (template, ...args) => {
@@ -280,5 +309,5 @@ export const submitProposal = async (
     '--yes',
   );
 
-  await voteLatestProposalAndWait();
+  await voteLatestProposalAndWait(title);
 };

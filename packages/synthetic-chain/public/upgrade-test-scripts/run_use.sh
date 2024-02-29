@@ -6,14 +6,12 @@ set -e
 
 PROPOSAL=$1
 if [ -z "$PROPOSAL" ]; then
-    echo "Must specify what proposal to use"
-    exit 1
+    fail "Must specify what proposal to use"
 fi
 PROPOSAL_DIR="/usr/src/proposals/$PROPOSAL/"
 
 if [ ! -d "$PROPOSAL_DIR" ]; then
-    echo "Proposal $PROPOSAL does not exist"
-    exit 1
+    fail "Proposal $PROPOSAL does not exist"
 fi
 
 if [ ! -f "$PROPOSAL_DIR/use.sh" ]; then

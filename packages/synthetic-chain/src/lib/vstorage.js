@@ -1,4 +1,3 @@
-// @ts-check
 import { assert, Fail } from './assert.js';
 
 const { freeze: harden } = Object; // XXX

@@ -89,27 +89,23 @@ If the proposal is _pending_ and does not yet have a number, use a letter. The p
 
 ## Development
 
-A known issue is that `yarn synthetic-chain` files with `Unknown file extension ".ts"`. To work around it, run from the bin dir as below.
+### Top-level commands
 
-To build the test images,
+```sh
+# build the "use" images (both platforms used),
+yarn build
 
-```
-tsx packages/synthetic-chain build
+# build test images (current platform) and run them:
+yarn test
+
+# run the tests for particular proposals,
+yarn test --match upgrade
+
+# debug the tests for one proposal,
+yarn test --debug --match upgrade-13
 ```
 
-To build the test images for particular proposals,
-
-```
-# build just upgrades
-tsx packages/synthetic-chain build --match upgrade
-```
-
-To run the tests for particular proposals,
-
-```
-# build just upgrades
-tsx packages/synthetic-chain test --match upgrade
-```
+### Proposals
 
 To use a local build of synthetic-chain,
 
@@ -136,6 +132,24 @@ To get the local files into the container, use a [bind mount](https://docs.docke
 ```
 docker run -it --entrypoint bash --mount type=bind,src=.,dst=/usr/src/a3p ghcr.io/agoric/agoric-3-proposals:use-upgrade-8
 ```
+
+### Common errors
+
+#### Consensus failure
+
+This one reports as failure, but it's actually the mechanism for triggering a chain-halting upgrade:
+
+```
+CONSENSUS FAILURE!!! err="UPGRADE \"agoric-upgrade-8\" NEEDED at height: 33: {}" module=consensus
+```
+
+But this one is a problem:
+
+```
+ERR CONSENSUS FAILURE!!! err="runtime error: invalid memory address or nil pointer dereference" module=consensus
+```
+
+The most likely cause is a problem voting in the the proposal to upgrade.
 
 # Contributing
 

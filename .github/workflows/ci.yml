@@ -34,6 +34,35 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  test-package:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 18.19 causes this problem running tsx:
+          # The --loader flag was deprecated in Node v20.6.0
+          node-version: 18.18
+
+      - name: Install deps
+        run: |
+          # Enable corepack for packageManager config
+          corepack enable || sudo corepack enable
+          yarn install
+
+      - name: Format
+        run: yarn format --check
+
+      - name: Typecheck
+        run: yarn tsc
+        working-directory: packages/synthetic-chain
+
+      - name: Test
+        run: yarn test
+        working-directory: packages/synthetic-chain
+
   # see https://docs.docker.com/build/ci/github-actions/test-before-push/
   test-proposals:
     permissions:
@@ -83,15 +112,17 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Setup synthetic-chain
+      - name: Install deps
         run: |
-          # The .ts scripts depend upon this
-          tsx --version || npm install --global tsx
           # Enable corepack for packageManager config
           corepack enable || sudo corepack enable
           yarn install
+
+      - name: Prepare Docker config
+        run: |
+          yarn build-cli
           # prepare files for bake-action
-          tsx packages/synthetic-chain prepare-build
+          yarn synthetic-chain prepare-build
 
       # Verify that all "use" images build across platforms.
       - name: Build proposal "use" images
@@ -120,7 +151,8 @@ jobs:
             ./docker-bake.json
             ./docker-bake.hcl
             ${{ steps.meta.outputs.bake-file }}
-          targets: use
+          # Include "latest" which is latest "use" image
+          targets: use, latest
           push: true
 
       - name: notify on failure

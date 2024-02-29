@@ -1,18 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ProposalInfo } from './proposals.ts';
+import { ProposalInfo } from './proposals.js';
 import assert from 'node:assert';
 import { execSync } from 'node:child_process';
 
 const fixupProposal = (proposal: ProposalInfo) => {
-  const proposalPath = path.join(
-    'proposals',
-    `${proposal.proposalIdentifier}:${proposal.proposalName}`,
-  );
+  const proposalPath = path.join('proposals', proposal.path);
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(proposalPath, 'package.json'), 'utf-8'),
   );
-  if (packageJson.dependencies) {
+  if (packageJson.dependencies || packageJson.devDependencies) {
     assert(
       packageJson.packageManager,
       'missing packageManager in package.json',
@@ -62,6 +59,23 @@ export const runDoctor = (proposals: ProposalInfo[]) => {
     process.exit(1);
   }
   console.log(yarnpath);
+
+  console.log('Verifying the CLI runs and create the Dockerfiles');
+  execSync('yarn synthetic-chain prepare-build', { stdio: 'inherit' });
+
+  console.log(
+    'Verifying the install Docker Buildx is new enough to handle the Bake file',
+  );
+  try {
+    execSync('docker buildx bake --print');
+  } catch (e: any) {
+    console.error('Docker Buildx version is too old');
+    execSync('docker buildx version', { stdio: 'inherit' });
+    console.log(
+      'It must be at least 0.11. https://docs.docker.com/build/release-notes/#0110',
+    );
+    process.exit(1);
+  }
 
   for (const proposal of proposals) {
     try {

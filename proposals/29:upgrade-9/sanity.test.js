@@ -1,3 +1,4 @@
+/** @file adapted from upgrade-10's precheck, things that should be true at the end of upgrade-9 */
 import test from 'ava';
 
 import fsp from 'node:fs/promises';
@@ -15,9 +16,8 @@ import {
   GOV3ADDR,
   PSM_PAIR,
 } from '@agoric/synthetic-chain/src/lib/constants.js';
-import { openVault } from '@agoric/synthetic-chain/src/lib/econHelpers.js';
 
-test(`Ensure there's only uist`, async t => {
+test(`there's only uist`, async t => {
   const result = await agd.query(
     'bank',
     'balances',
@@ -28,7 +28,7 @@ test(`Ensure there's only uist`, async t => {
   t.is(result.balances[0].denom, 'uist');
 });
 
-test('Ensure gov1 provisioned', async t => {
+test('gov1 provisioned', async t => {
   const result = await agd.query(
     'vstorage',
     'data',
@@ -38,7 +38,7 @@ test('Ensure gov1 provisioned', async t => {
   t.not(result.value.length, 0);
 });
 
-test('Ensure gov2 provisioned', async t => {
+test('gov2 provisioned', async t => {
   const result = await agd.query(
     'vstorage',
     'data',
@@ -48,7 +48,7 @@ test('Ensure gov2 provisioned', async t => {
   t.not(result.value.length, 0);
 });
 
-test('Ensure gov3 provisioned', async t => {
+test('gov3 provisioned', async t => {
   const result = await agd.query(
     'vstorage',
     'data',
@@ -58,7 +58,7 @@ test('Ensure gov3 provisioned', async t => {
   t.not(result.value.length, 0);
 });
 
-test('Ensure user2 not provisioned', async t => {
+test('user2 not provisioned', async t => {
   try {
     await getUser('user2');
     t.fail();
@@ -67,7 +67,7 @@ test('Ensure user2 not provisioned', async t => {
   }
 });
 
-test('Ensure no vaults exist', async t => {
+test('no vaults exist', async t => {
   const result = await agd.query(
     'vstorage',
     'data',
@@ -85,29 +85,6 @@ test(`Provision pool has right balance`, async t => {
   );
 
   t.is(result.balances[0].amount, '19000000');
-});
-
-test('Validate PSM denoms', async t => {
-  const psmISTChildren = await agd.query(
-    'vstorage',
-    'children',
-    'published.psm.IST',
-  );
-
-  t.not(psmISTChildren.children.legnth, 0);
-
-  const denoms = [
-    'USDC_axl',
-    'DAI_axl',
-    'DAI_grv',
-    'USDC_grv',
-    'USDT_axl',
-    'USDT_grv',
-  ];
-
-  for (const denom of denoms) {
-    t.truthy(psmISTChildren.children.includes(denom));
-  }
 });
 
 test('PSM gov params were preserved', async t => {
@@ -168,7 +145,6 @@ test('PSM metric params were preserved', async t => {
   );
 });
 
-// upgrade-8 wrote the JSON file
 test('Provision pool metrics are retained across vaults upgrade', async t => {
   const provisionPoolMetrics = await agoric.follow(
     '-lF',
@@ -177,7 +153,7 @@ test('Provision pool metrics are retained across vaults upgrade', async t => {
 
   const provisionPoolMetricsData = await fsp.readFile(
     '/root/.agoric/provision_pool_metrics.json',
-    'utf8',
+    'binary',
   );
 
   const testProvisionPoolMetrics = JSON.parse(provisionPoolMetricsData);
@@ -194,19 +170,6 @@ test('Provision pool metrics are retained across vaults upgrade', async t => {
     provisionPoolMetrics.walletsProvisioned,
     testProvisionPoolMetrics.walletsProvisioned,
   );
-});
-
-test('Pre Vault tests', async t => {
-  try {
-    await openVault(GOV1ADDR, 5, 9);
-    t.fail();
-  } catch (error) {
-    t.truthy(
-      error.message.includes(
-        "'Error: maxDebtFor called before a collateral quote was available'",
-      ),
-    );
-  }
 });
 
 test('Gov1 has no vaults', async t => {

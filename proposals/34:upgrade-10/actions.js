@@ -1,25 +1,23 @@
-import { promises as fs } from 'fs';
-import assert from 'assert';
+import assert from 'node:assert';
 
 import {
-  agd,
-  agoric,
   agops,
   agopsLocation,
+  agoric,
   executeCommand,
 } from '@agoric/synthetic-chain/src/lib/cliHelper.js';
+import {
+  addUser,
+  executeOffer,
+  provisionSmartWallet,
+  waitForBlock,
+} from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
 import {
   ATOM_DENOM,
   GOV1ADDR,
   GOV2ADDR,
   GOV3ADDR,
 } from '@agoric/synthetic-chain/src/lib/constants.js';
-import {
-  waitForBlock,
-  executeOffer,
-  addUser,
-  provisionSmartWallet,
-} from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
 
 const govAccounts = [GOV1ADDR, GOV2ADDR, GOV3ADDR];
 

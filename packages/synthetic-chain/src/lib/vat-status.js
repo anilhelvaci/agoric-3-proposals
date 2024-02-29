@@ -1,4 +1,3 @@
-// @ts-check
 import dbOpenAmbient from 'better-sqlite3';
 import { HOME } from './constants.js';
 import { NonNullish } from './assert.js';
@@ -70,7 +69,7 @@ const makeSwingstore = db => {
 /**
  * @param {string} vatName
  */
-export const getIncarnation = async vatName => {
+export const getVatDetails = async vatName => {
   const fullPath = swingstorePath.replace(/^~/, NonNullish(HOME));
   const kStore = makeSwingstore(dbOpenAmbient(fullPath, { readonly: true }));
 
@@ -79,9 +78,17 @@ export const getIncarnation = async vatName => {
 
   const source = vatInfo.source();
   const { incarnation } = vatInfo.currentSpan();
+  return { vatName, vatID, incarnation, ...source };
+};
+
+/**
+ * @param {string} vatName
+ */
+export const getIncarnation = async vatName => {
+  const details = await getVatDetails(vatName);
 
   // misc info to stderr
-  console.error(JSON.stringify({ vatName, vatID, incarnation, ...source }));
+  console.error(JSON.stringify(details));
 
-  return incarnation;
+  return details.incarnation;
 };

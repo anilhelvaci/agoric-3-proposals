@@ -8,32 +8,17 @@
  */
 
 import anyTest from 'ava';
-import dbOpenAmbient from 'better-sqlite3';
-import * as cpAmbient from 'child_process';
-import * as fspAmbient from 'fs/promises';
-import * as pathAmbient from 'path';
-import * as processAmbient from 'process';
-import { tmpName as tmpNameAmbient } from 'tmp';
-
-import { makeAgd } from '@agoric/synthetic-chain/src/lib/agd-lib.js';
 import {
-  agoric,
   wellKnownIdentities,
 } from '@agoric/synthetic-chain/src/lib/cliHelper.js';
-import { dbTool } from '@agoric/synthetic-chain/src/lib/vat-status.js';
-import {
-  makeFileRd,
-  makeFileRW,
-} from '@agoric/synthetic-chain/src/lib/webAsset.js';
 import {
   bundleDetail,
   ensureISTForInstall, flags, getContractInfo,
-  loadedBundleIds,
+  loadedBundleIds, makeTestContext, readBundleSizes,
   testIncludes,
   txAbbr
 } from './core-eval-support.js';
 import { voteLatestProposalAndWait, waitForBlock } from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
-import { NonNullish } from '@agoric/synthetic-chain/src/lib/assert.js';
 
 /** @typedef {Awaited<ReturnType<typeof makeTestContext>>} TestContext */
 /** @type {import('ava').TestFn<TestContext>}} */
@@ -90,47 +75,7 @@ const staticConfig = {
   ...dappAPI,
 };
 
-/**
- * Provide access to the outside world via t.context.
- * @param {Object} io
- */
-const makeTestContext = async (io = {}) => {
-  const {
-    process: { env, cwd } = processAmbient,
-    child_process: { execFileSync } = cpAmbient,
-    dbOpen = dbOpenAmbient,
-    fsp = fspAmbient,
-    path = pathAmbient,
-    tmpName = tmpNameAmbient,
-  } = io;
-
-  const src = makeFileRd(`${cwd()}/assets`, { fsp, path });
-  const tmpNameP = prefix =>
-    new Promise((resolve, reject) =>
-      tmpName({ prefix }, (err, x) => (err ? reject(err) : resolve(x))),
-    );
-
-  const config = {
-    chainId: 'agoriclocal',
-    ...staticConfig,
-  };
-
-  // This agd API is based on experience "productizing"
-  // the inter bid CLI in #7939
-  const agd = makeAgd({ execFileSync: execFileSync }).withOpts({
-    keyringBackend: 'test',
-  });
-
-  const dbPath = staticConfig.swingstorePath.replace(/^~/, env.HOME);
-  const swingstore = dbTool(dbOpen(dbPath, { readonly: true }));
-
-  /* @param {string} baseName */
-  const mkTempRW = async baseName =>
-    makeFileRW(await tmpNameP(baseName), { fsp, path });
-  return { agd, agoric, swingstore, config, mkTempRW, src };
-};
-
-test.before(async t => (t.context = await makeTestContext()));
+test.before(async t => (t.context = await makeTestContext({ testConfig: staticConfig })));
 
 test.serial(`pre-flight: not in agoricNames.instance`, async t => {
   const { config, agoric } = t.context;
@@ -157,32 +102,9 @@ test.serial('bundles not yet installed', async t => {
   }
 });
 
-/** @param {number[]} xs */
-const sum = xs => xs.reduce((a, b) => a + b, 0);
-
-const getFileSize = async (src, fileName) => {
-  const file = src.join(fileName);
-  const { size } = await file.stat();
-  return size;
-};
-
-/** @param {import('./lib/webAsset.js').FileRd} src */
-const readBundleSizes = async src => {
-  const info = staticConfig.buildInfo;
-  const bundleSizes = await Promise.all(
-    info
-      .map(({ bundles }) =>
-        bundles.map(bundleName => getFileSize(src, bundleName)),
-      )
-      .flat(),
-  );
-  const totalSize = sum(bundleSizes);
-  return { bundleSizes, totalSize };
-};
-
 test.serial('ensure enough IST to install bundles', async t => {
   const { agd, config, src } = t.context;
-  const { totalSize, bundleSizes } = await readBundleSizes(src);
+  const { totalSize, bundleSizes } = await readBundleSizes(src, staticConfig);
   console.log({ totalSize, bundleSizes });
   await ensureISTForInstall(agd, config, totalSize, {
     log: t.log,
@@ -230,21 +152,6 @@ test.serial('ensure bundles installed', async t => {
   t.is(todo, done);
 });
 
-/**
- * @param {string} text
- * @param {string} fileName
- */
-const acctSub = (text, fileName) => {
-  let out = text;
-  for (const [name, detail] of Object.entries(staticConfig.accounts)) {
-    if (out.includes(detail.impersonate)) {
-      console.log('impersonating', name, 'in', fileName);
-      out = out.replace(detail.impersonate, detail.address);
-    }
-  }
-  return out;
-};
-
 test.serial('core eval proposal passes', async t => {
   const { agd, swingstore, config, mkTempRW, src } = t.context;
   const from = agd.lookup(config.proposer);
@@ -262,22 +169,14 @@ test.serial('core eval proposal passes', async t => {
     }
   }
 
-  /** @param {string} script */
-  const withKnownKeys = async script => {
-    const file = src.join(script);
-    const text = await file.readText();
-    const text2 = acctSub(text, script);
-    const out = await mkTempRW(script);
-    await out.writeText(text2);
-    return out.toString();
-  };
-
   const evalNames = buildInfo
     .map(({ evals }) => evals)
     .flat()
     .map(e => [e.permit, e.script])
     .flat();
-  const evalPaths = await Promise.all(evalNames.map(withKnownKeys));
+  const evalPaths = await Promise.all(evalNames.map(evalName => {
+    return src.join(evalName).toString();
+  }));
   t.log(evalPaths);
   console.log('await tx', evalPaths);
   const result = await agd.tx(

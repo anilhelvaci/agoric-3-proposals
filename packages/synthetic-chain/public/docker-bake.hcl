@@ -43,3 +43,15 @@ target "test" {
   }
   target = "test-${proposal}"
 }
+
+// Single image for using the chain with the state after all the passed proposals
+// Must match the CI config and synthetic-chain default fromTag
+target "latest" {
+  inherits = ["docker-metadata-action"]
+  platforms = PLATFORMS
+  tags = ["ghcr.io/agoric/agoric-3-proposals:latest"]
+  labels = {
+    "org.opencontainers.image.title": "All passed proposals",
+    "org.opencontainers.image.description": "Use agoric-3 synthetic chain including all passed proposals",
+  }
+}

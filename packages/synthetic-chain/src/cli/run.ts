@@ -20,7 +20,7 @@ export const debugTestImage = (proposal: ProposalInfo) => {
     docker exec -ti $(docker ps -q -f ancestor=${name}) bash
   
   And within that shell:
-    cd /usr/src/proposals/${proposal.proposalIdentifier}:${proposal.proposalName} && ./test.sh
+    cd /usr/src/proposals/${proposal.path} && ./test.sh
   
   The 'proposals' path is mounted in the container so your edits will appear there.
   `,

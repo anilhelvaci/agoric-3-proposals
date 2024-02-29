@@ -1,6 +1,7 @@
 import { makeHelpers } from '/usr/src/agoric-sdk/packages/deploy-script-support/src/helpers.js';
 import { defaultProposalBuilder as vaultProposalBuilder } from '/usr/src/agoric-sdk/packages/inter-protocol/scripts/add-collateral-core.js';
 import { defaultProposalBuilder as oraclesProposalBuilder } from '/usr/src/agoric-sdk/packages/inter-protocol/scripts/price-feed-core.js';
+import { makeInstallCache } from '/usr/src/agoric-sdk/packages/inter-protocol/src/proposals/utils.js';
 import fs from 'fs';
 
 /** @type {import('@agoric/deploy-script-support/src/externalTypes.js').ProposalBuilder} */

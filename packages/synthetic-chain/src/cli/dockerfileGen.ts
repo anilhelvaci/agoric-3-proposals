@@ -1,6 +1,3 @@
-#!/usr/bin/env tsx
-// @ts-check
-
 import fs from 'node:fs';
 import {
   type CoreEvalProposal,
@@ -10,7 +7,7 @@ import {
   imageNameForProposal,
   isPassed,
 } from './proposals.js';
-import { Platform } from './build.ts';
+import { Platform } from './build.js';
 
 /**
  * Templates for Dockerfile stages
@@ -53,7 +50,7 @@ FROM ghcr.io/agoric/agoric-3-proposals:${fromTag} as use-${fromTag}
    * - Submit the software-upgrade proposal for planName and run until upgradeHeight, leaving the state-dir ready for next agd.
    */
   PREPARE(
-    { planName, proposalName, upgradeInfo }: SoftwareUpgradeProposal,
+    { path, planName, proposalName, upgradeInfo }: SoftwareUpgradeProposal,
     lastProposal: ProposalInfo,
   ) {
     return `
@@ -65,10 +62,11 @@ ENV UPGRADE_TO=${planName} UPGRADE_INFO=${JSON.stringify(
       encodeUpgradeInfo(upgradeInfo),
     )}
 
+COPY --link --chmod=755 ./proposals/${path} /usr/src/proposals/${path}
 COPY --link --chmod=755 ./upgrade-test-scripts/env_setup.sh ./upgrade-test-scripts/run_prepare.sh ./upgrade-test-scripts/start_to_to.sh /usr/src/upgrade-test-scripts/
 WORKDIR /usr/src/upgrade-test-scripts
 SHELL ["/bin/bash", "-c"]
-RUN ./run_prepare.sh
+RUN ./run_prepare.sh ${path}
 `;
   },
   /**
@@ -76,11 +74,7 @@ RUN ./run_prepare.sh
    * - Start agd with the SDK that has the upgradeHandler
    * - Run any core-evals associated with the proposal (either the ones specified in prepare, or straight from the proposal)
    */
-  EXECUTE({
-    proposalIdentifier,
-    proposalName,
-    sdkImageTag,
-  }: SoftwareUpgradeProposal) {
+  EXECUTE({ path, proposalName, sdkImageTag }: SoftwareUpgradeProposal) {
     return `
 # EXECUTE ${proposalName}
 FROM ghcr.io/agoric/agoric-sdk:${sdkImageTag} as execute-${proposalName}
@@ -88,9 +82,9 @@ FROM ghcr.io/agoric/agoric-sdk:${sdkImageTag} as execute-${proposalName}
 WORKDIR /usr/src/upgrade-test-scripts
 
 # base is a fresh sdk image so set up the proposal and its dependencies
-COPY --link --chmod=755 ./proposals/${proposalIdentifier}:${proposalName} /usr/src/proposals/${proposalIdentifier}:${proposalName}
+COPY --link --chmod=755 ./proposals/${path} /usr/src/proposals/${path}
 COPY --link --chmod=755 ./upgrade-test-scripts/env_setup.sh ./upgrade-test-scripts/run_execute.sh  ./upgrade-test-scripts/start_to_to.sh ./upgrade-test-scripts/install_deps.sh /usr/src/upgrade-test-scripts/
-RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${proposalIdentifier}:${proposalName}
+RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${path}
 
 COPY --link --from=prepare-${proposalName} /root/.agoric /root/.agoric
 
@@ -102,25 +96,22 @@ RUN ./run_execute.sh
    * Run a core-eval proposal
    * - Run the core-eval scripts from the proposal. They are only guaranteed to have started, not completed.
    */
-  EVAL(
-    { proposalIdentifier, proposalName }: CoreEvalProposal,
-    lastProposal: ProposalInfo,
-  ) {
+  EVAL({ path, proposalName }: CoreEvalProposal, lastProposal: ProposalInfo) {
     return `
 # EVAL ${proposalName}
 FROM use-${lastProposal.proposalName} as eval-${proposalName}
 
-COPY --link --chmod=755 ./proposals/${proposalIdentifier}:${proposalName} /usr/src/proposals/${proposalIdentifier}:${proposalName}
+COPY --link --chmod=755 ./proposals/${path} /usr/src/proposals/${path}
 
 WORKDIR /usr/src/upgrade-test-scripts
 
 # First stage of this proposal so install its deps.
 COPY --link ./upgrade-test-scripts/install_deps.sh /usr/src/upgrade-test-scripts/
-RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${proposalIdentifier}:${proposalName}
+RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${path}
 
 COPY --link --chmod=755 ./upgrade-test-scripts/*eval* /usr/src/upgrade-test-scripts/
 SHELL ["/bin/bash", "-c"]
-RUN ./run_eval.sh ${proposalIdentifier}:${proposalName}
+RUN ./run_eval.sh ${path}
 `;
   },
   /**
@@ -128,7 +119,7 @@ RUN ./run_eval.sh ${proposalIdentifier}:${proposalName}
    *
    * - Perform any mutations that should be part of chain history
    */
-  USE({ proposalName, proposalIdentifier, type }: ProposalInfo) {
+  USE({ path, proposalName, type }: ProposalInfo) {
     const previousStage =
       type === 'Software Upgrade Proposal' ? 'execute' : 'eval';
     return `
@@ -137,9 +128,10 @@ FROM ${previousStage}-${proposalName} as use-${proposalName}
 
 WORKDIR /usr/src/upgrade-test-scripts
 
-COPY --link --chmod=755 ./upgrade-test-scripts/run_use.sh /usr/src/upgrade-test-scripts/
+COPY --link --chmod=755 ./upgrade-test-scripts/run_use.sh ./upgrade-test-scripts/start_agd.sh /usr/src/upgrade-test-scripts/
 SHELL ["/bin/bash", "-c"]
-RUN ./run_use.sh ${proposalIdentifier}:${proposalName}
+RUN ./run_use.sh ${path}
+ENTRYPOINT ./start_agd.sh
 `;
   },
   /**
@@ -150,35 +142,30 @@ RUN ./run_use.sh ${proposalIdentifier}:${proposalName}
    *
    * Needs to be an image to have access to the SwingSet db. run it with `docker run --rm` to not make the container ephemeral.
    */
-  TEST({ proposalName, proposalIdentifier }: ProposalInfo) {
+  TEST({ path, proposalName }: ProposalInfo) {
     return `
 # TEST ${proposalName}
 FROM use-${proposalName} as test-${proposalName}
 
 WORKDIR /usr/src/upgrade-test-scripts
 
-# copy run_test for this entrypoint and start_agd for optional debugging
-COPY --link --chmod=755 ./upgrade-test-scripts/run_test.sh ./upgrade-test-scripts/start_agd.sh /usr/src/upgrade-test-scripts/
+COPY --link --chmod=755 ./upgrade-test-scripts/run_test.sh /usr/src/upgrade-test-scripts/
 SHELL ["/bin/bash", "-c"]
-ENTRYPOINT ./run_test.sh ${proposalIdentifier}:${proposalName}
+ENTRYPOINT ./run_test.sh ${path}
 `;
   },
   /**
    * The last target in the file, for untargeted `docker build`
    */
-  DEFAULT(lastProposal: ProposalInfo) {
+  LAST(lastProposal: ProposalInfo) {
     // Assumes the 'use' image is built and tagged.
     // This isn't necessary for a multi-stage build, but without it CI
     // rebuilds the last "use" image during the "default" image step
     // Some background: https://github.com/moby/moby/issues/34715
     const useImage = imageNameForProposal(lastProposal, 'use').name;
     return `
-# DEFAULT
-FROM ${useImage}
-
-WORKDIR /usr/src/upgrade-test-scripts
-SHELL ["/bin/bash", "-c"]
-ENTRYPOINT ./start_agd.sh
+# LAST
+FROM ${useImage} as latest
 `;
   },
 };
@@ -218,6 +205,7 @@ export function writeDockerfile(
       proposalName: fromTag,
       proposalIdentifier: fromTag,
       // XXX these are bogus
+      path: 'VIRTUAL',
       type: '/agoric.swingset.CoreEvalProposal',
       source: 'subdir',
     };
@@ -258,7 +246,7 @@ export function writeDockerfile(
   // If one of the proposals is a passed proposal, make the latest one the default entrypoint
   const lastPassed = allProposals.findLast(isPassed);
   if (lastPassed) {
-    blocks.push(stage.DEFAULT(lastPassed));
+    blocks.push(stage.LAST(lastPassed));
   }
 
   const contents = blocks.join('\n');

@@ -300,7 +300,7 @@ test.serial('core eval proposal passes', async t => {
   t.log(txAbbr(result));
   t.is(result.code, 0);
 
-  const detail = await voteLatestProposalAndWait();
+  const detail = await voteLatestProposalAndWait(info.title);
   t.log(detail.proposal_id, detail.voting_end_time, detail.status);
   t.is(detail.status, 'PROPOSAL_STATUS_PASSED');
 });

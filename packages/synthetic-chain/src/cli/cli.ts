@@ -1,25 +1,21 @@
-#!/usr/bin/env tsx
-
+#!/usr/bin/env node
+/**
+ * @file CLI entrypoint, transpiled during build so Node is the env to run it in
+ */
+import chalk from 'chalk';
+import assert from 'node:assert';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import chalk from 'chalk';
 import {
   bakeTarget,
   buildProposalSubmissions,
   readBuildConfig,
-} from './src/cli/build.js';
-import {
-  writeBakefileProposals,
-  writeDockerfile,
-} from './src/cli/dockerfileGen.js';
-import { runDoctor } from './src/cli/doctor.js';
-import {
-  imageNameForProposal,
-  matchOneProposal,
-  readProposals,
-} from './src/cli/proposals.js';
-import { debugTestImage, runTestImage } from './src/cli/run.js';
+} from './build.js';
+import { writeBakefileProposals, writeDockerfile } from './dockerfileGen.js';
+import { runDoctor } from './doctor.js';
+import { imageNameForProposal, readProposals } from './proposals.js';
+import { debugTestImage, runTestImage } from './run.js';
 
 const { positionals, values } = parseArgs({
   options: {
@@ -36,7 +32,7 @@ const allProposals = readProposals(root);
 
 const { match } = values;
 const proposals = match
-  ? allProposals.filter(p => p.proposalName.includes(match))
+  ? allProposals.filter(p => p.path.includes(match))
   : allProposals;
 
 const [cmd] = positionals;
@@ -67,12 +63,13 @@ Instead use a builder that supports multiplatform such as depot.dev.
  */
 const prepareDockerBuild = () => {
   const cliPath = new URL(import.meta.url).pathname;
+  const publicDir = path.resolve(cliPath, '..', '..');
   // copy and generate files of the build context that aren't in the build contents
-  execSync(`cp -r ${path.resolve(cliPath, '..', 'docker-bake.hcl')} .`);
+  execSync(`cp -r ${path.resolve(publicDir, 'docker-bake.hcl')} .`);
   writeDockerfile(allProposals, buildConfig.fromTag);
   writeBakefileProposals(allProposals, buildConfig.platforms);
   // copy and generate files to include in the build
-  execSync(`cp -r ${path.resolve(cliPath, '..', 'upgrade-test-scripts')} .`);
+  execSync(`cp -r ${path.resolve(publicDir, 'upgrade-test-scripts')} .`);
   buildProposalSubmissions(proposals);
   // set timestamp of build content to zero to avoid invalidating the build cache
   // (change in contents will still invalidate)
@@ -101,7 +98,10 @@ switch (cmd) {
     prepareDockerBuild();
 
     if (values.debug) {
-      const proposal = matchOneProposal(proposals, match!);
+      assert(match, '--debug requires -m');
+      assert(proposals.length > 0, 'no proposals match');
+      assert(proposals.length === 1, 'too many proposals match');
+      const proposal = proposals[0];
       console.log(chalk.yellow.bold(`Debugging ${proposal.proposalName}`));
       bakeTarget(imageNameForProposal(proposal, 'test').target, values.dry);
       debugTestImage(proposal);

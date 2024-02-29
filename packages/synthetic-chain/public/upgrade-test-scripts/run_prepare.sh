@@ -2,8 +2,7 @@
 # Prepare an upgrade
 
 if [[ -z "${UPGRADE_TO}" ]]; then
-  echo "Requires UPGRADE_TO to be set"
-  exit 1
+  fail "Requires UPGRADE_TO to be set"
 fi
 
 # figlet -f cyberlarge Prepare upgrade
@@ -23,7 +22,24 @@ grep -qF 'printKeys' /root/.bashrc || echo "printKeys" >>/root/.bashrc
 
 source ./env_setup.sh
 
+PROPOSAL=$1
+if [ -z "$PROPOSAL" ]; then
+  fail "Must specify what proposal to use"
+fi
+
 startAgd
+
+echo "[$PROPOSAL] Agd started."
+cd /usr/src/proposals/"$PROPOSAL/" || fail "Proposal $PROPOSAL does not exist"
+
+if [ -f "prepare.sh" ]; then
+  # In case the proposal needs some chain actions to be done before the upgrade,
+  # for example to set up some state that is tested after the upgrade.
+  echo "[$PROPOSAL] Running prepare.sh"
+  ./prepare.sh
+fi
+
+echo "[$PROPOSAL] Voting in the upgrade."
 
 voting_period_s=10
 latest_height=$(agd status | jq -r .SyncInfo.latest_block_height)
