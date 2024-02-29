@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "prepare": "yarn build",
-    "build": "tsup",
+    "build": "echo No build step",
     "test": "NODE_OPTIONS='--loader=tsx --no-warnings' ava"
   },
   "engines": {
@@ -29,7 +29,6 @@
     "@types/better-sqlite3": "^7.6.9",
     "@types/node": "^18.19.14",
     "ava": "^5.3.1",
-    "tsup": "^8.0.2",
     "tsx": "^3.14.0",
     "typescript": "^5.3.3"
   },

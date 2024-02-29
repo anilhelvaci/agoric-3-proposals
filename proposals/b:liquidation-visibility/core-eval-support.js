@@ -8,16 +8,22 @@ import {
   makeAgd,
   dbTool,
   waitForBlock,
-  agops, agd, getContractInfo,
+  agops,
+  agd,
+  getContractInfo,
 } from '@agoric/synthetic-chain';
-import processAmbient from "process";
-import cpAmbient from "child_process";
-import dbOpenAmbient from "better-sqlite3";
-import fspAmbient from "fs/promises";
-import pathAmbient from "path";
-import { tmpName as tmpNameAmbient } from "tmp";
+import processAmbient from 'process';
+import cpAmbient from 'child_process';
+import dbOpenAmbient from 'better-sqlite3';
+import fspAmbient from 'fs/promises';
+import pathAmbient from 'path';
+import { tmpName as tmpNameAmbient } from 'tmp';
 
-export const makeTestContext = async ({ io = {}, testConfig, srcDir = 'assets' }) => {
+export const makeTestContext = async ({
+  io = {},
+  testConfig,
+  srcDir = 'assets',
+}) => {
   const {
     process: { env, cwd } = processAmbient,
     child_process: { execFileSync } = cpAmbient,
@@ -103,13 +109,7 @@ export const poll = async (check, maxTries) => {
  *
  * @param {AgopsOfferParams}
  */
-export const agopsOffer = async ({
-  t,
-  agopsParams,
-  txParams,
-  from,
-  src,
-}) => {
+export const agopsOffer = async ({ t, agopsParams, txParams, from, src }) => {
   const { agops, agoric } = t.context;
 
   await src.mkdir(from);
@@ -118,7 +118,7 @@ export const agopsOffer = async ({
   try {
     const test = await agops.oracle(...agopsParams);
     await fileRW.writeText(test);
-    t.log({ test })
+    t.log({ test });
     await agoric.wallet(...txParams, '--offer', fileRW.toString());
   } catch (e) {
     t.fail(e);
@@ -131,9 +131,7 @@ export const agopsOffer = async ({
  * @return {Promise<string[]>}
  */
 export const getStorageChildren = async path => {
-  const { children } = await agd.query('vstorage',
-    'children',
-    path);
+  const { children } = await agd.query('vstorage', 'children', path);
 
   return children;
 };
@@ -142,12 +140,17 @@ export const getStorageChildren = async path => {
  * @return {Promise<number>}
  */
 const getPriceRound = async () => {
-  const children = await getStorageChildren('published.priceFeed.STARS-USD_price_feed');
+  const children = await getStorageChildren(
+    'published.priceFeed.STARS-USD_price_feed',
+  );
   console.log({ children });
   const roundChild = [...children].find(element => element === 'latestRound');
   if (roundChild === undefined) return 0;
 
-  const { roundId } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
+  const { roundId } = await getContractInfo(
+    'priceFeed.STARS-USD_price_feed.latestRound',
+    { agoric },
+  );
   return Number(roundId);
 };
 
@@ -173,30 +176,24 @@ export const pushPrice = async (t, price, oracles) => {
       curRound + 1,
       '--oracleAdminAcceptOfferId',
       id,
-    ]
+    ];
   };
 
   const buildOfferArgs = from => {
-    return [
-      'send',
-      '--from',
-      from,
-      '--keyring-backend=test',
-    ]
+    return ['send', '--from', from, '--keyring-backend=test'];
   };
 
   const offersPs = [];
   for (const { address, acceptId } of oracles) {
     offersPs.push(
       agopsOffer({
-         t,
-         agopsParams: buildAgopsArgs(acceptId),
-         txParams: buildOfferArgs(address),
-         src: tmpRW,
-         from: address
-        }
-      )
-    )
+        t,
+        agopsParams: buildAgopsArgs(acceptId),
+        txParams: buildOfferArgs(address),
+        src: tmpRW,
+        from: address,
+      }),
+    );
   }
 
   await Promise.all(offersPs);
@@ -218,8 +215,14 @@ export const acceptsOracleInvitations = async (t, oracles) => {
   const offersP = [];
   for (const { address, acceptId } of oracles) {
     offersP.push(
-      agopsOffer({ t, agopsParams: buildAgopsParams(acceptId), txParams: buildOfferParams(address), from: address, src: tmpRW}),
-    )
+      agopsOffer({
+        t,
+        agopsParams: buildAgopsParams(acceptId),
+        txParams: buildOfferParams(address),
+        from: address,
+        src: tmpRW,
+      }),
+    );
   }
 
   await Promise.all(offersP);

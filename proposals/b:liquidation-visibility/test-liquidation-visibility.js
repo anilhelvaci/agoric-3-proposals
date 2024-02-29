@@ -1,5 +1,22 @@
 // @ts-check
 
+import anyTest from 'ava';
+import {
+  ensureISTForInstall,
+  flags,
+  loadedBundleIds,
+  testIncludes,
+} from './liquidation-visibility-support.js';
+import { makeTestContext, readBundleSizes } from './core-eval-support.js';
+import {
+  voteLatestProposalAndWait,
+  waitForBlock,
+  wellKnownIdentities,
+  getContractInfo,
+  bundleDetail,
+  txAbbr,
+} from '@agoric/synthetic-chain';
+
 /**
  * @typedef {{
  *   bundles: string[],
@@ -7,21 +24,9 @@
  * }} ProposalInfo
  */
 
-import anyTest from 'ava';
-import {
-  wellKnownIdentities,
-} from '@agoric/synthetic-chain/src/lib/cliHelper.js';
-import {
-  bundleDetail,
-  ensureISTForInstall, flags, getContractInfo,
-  loadedBundleIds, makeTestContext, readBundleSizes,
-  testIncludes,
-  txAbbr
-} from './core-eval-support.js';
-import { voteLatestProposalAndWait, waitForBlock } from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
-
 /** @typedef {Awaited<ReturnType<typeof makeTestContext>>} TestContext */
 /** @type {import('ava').TestFn<TestContext>}} */
+// @ts-ignore
 const test = anyTest;
 
 const assetInfo = {
@@ -29,11 +34,14 @@ const assetInfo = {
   buildAssets: {
     coreEvalInfo: {
       evals: [
-        { permit: 'upgrade-vaults-liq-visibility-permit.json', script: 'upgrade-vaults-liq-visibility.js' },
+        {
+          permit: 'upgrade-vaults-liq-visibility-permit.json',
+          script: 'upgrade-vaults-liq-visibility.js',
+        },
       ],
       bundles: [
         'b1-7a5b067832fe1e968aca362ad713126737c3f0289dba7b527e0d23648b9419395c16399eed9358d5c555d29d2724561c12902dc2c960eca1bc4f0deee373a5c8.json',
-        'b1-6874b3846d9b293af2e687b168ac825dc19e027f949b10e9c766507db604246c90866428581b94e068779f4dabbf6dd9da5b4161e483a50c6525c8a53edc3025.json'
+        'b1-6874b3846d9b293af2e687b168ac825dc19e027f949b10e9c766507db604246c90866428581b94e068779f4dabbf6dd9da5b4161e483a50c6525c8a53edc3025.json',
       ],
     },
   },
@@ -75,7 +83,9 @@ const staticConfig = {
   ...dappAPI,
 };
 
-test.before(async t => (t.context = await makeTestContext({ testConfig: staticConfig })));
+test.before(
+  async t => (t.context = await makeTestContext({ testConfig: staticConfig })),
+);
 
 test.serial(`pre-flight: not in agoricNames.instance`, async t => {
   const { config, agoric } = t.context;
@@ -104,6 +114,7 @@ test.serial('bundles not yet installed', async t => {
 
 test.serial('ensure enough IST to install bundles', async t => {
   const { agd, config, src } = t.context;
+  // @ts-ignore
   const { totalSize, bundleSizes } = await readBundleSizes(src, staticConfig);
   console.log({ totalSize, bundleSizes });
   await ensureISTForInstall(agd, config, totalSize, {
@@ -123,9 +134,7 @@ test.serial('ensure bundles installed', async t => {
   for await (const { bundles } of staticConfig.buildInfo) {
     todo += bundles.length;
     for await (const bundle of bundles) {
-      const { id, endoZipBase64Sha512, fileName } = bundleDetail(
-        bundle
-      );
+      const { id, endoZipBase64Sha512, fileName } = bundleDetail(bundle);
       if (loaded.includes(id)) {
         t.log('bundle already installed', id);
         done += 1;
@@ -133,7 +142,13 @@ test.serial('ensure bundles installed', async t => {
       }
 
       const result = await agd.tx(
-        ['swingset', 'install-bundle', `@./assets/${fileName}`, '--gas', '120000000'],
+        [
+          'swingset',
+          'install-bundle',
+          `@./assets/${fileName}`,
+          '--gas',
+          '120000000',
+        ],
         { from, chainId, yes: true },
       );
       t.log(txAbbr(result));
@@ -174,9 +189,11 @@ test.serial('core eval proposal passes', async t => {
     .flat()
     .map(e => [e.permit, e.script])
     .flat();
-  const evalPaths = await Promise.all(evalNames.map(evalName => {
-    return src.join(evalName).toString();
-  }));
+  const evalPaths = await Promise.all(
+    evalNames.map(evalName => {
+      return src.join(evalName).toString();
+    }),
+  );
   t.log(evalPaths);
   console.log('await tx', evalPaths);
   const result = await agd.tx(
@@ -195,6 +212,7 @@ test.serial('core eval proposal passes', async t => {
   t.is(result.code, 0);
 
   console.log('await voteLatestProposalAndWait', evalPaths);
+  // @ts-ignore
   const detail = await voteLatestProposalAndWait();
   t.log(detail.proposal_id, detail.voting_end_time, detail.status);
 
@@ -202,4 +220,4 @@ test.serial('core eval proposal passes', async t => {
   await waitForBlock(15);
 
   t.is(detail.status, 'PROPOSAL_STATUS_PASSED');
-})
+});
