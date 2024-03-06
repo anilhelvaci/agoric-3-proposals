@@ -227,3 +227,21 @@ export const acceptsOracleInvitations = async (t, oracles) => {
   // Wait 5 blocks
   await waitForBlock(5);
 };
+
+/**
+ *
+ * @param {{
+ *  src: string,
+ *  dest: string
+ * }[]} config dest must be absolute and src can be relative
+ * @param fsp
+ */
+export const copyAll = (config, { fsp }) => {
+  const copyPs = [];
+  for (const { src, dest } of config) {
+    const srcUrl = new URL(src, import.meta.url);
+    copyPs.push(fsp.cp(srcUrl, dest));
+  }
+
+  return Promise.all(copyPs);
+}
