@@ -13,9 +13,9 @@ cp $proposalRoot/artifacts/scripts/liquidation-visibility-upgrade.js \
 cp $proposalRoot/artifacts/src/proposals/vaultsLiquidationVisibility.js \
   $sdkRoot/packages/inter-protocol/src/proposals
 
-cd $sdkRoot/packages/inter-protocol/
-yarn build:bundles
-agoric run scripts/liquidation-visibility-upgrade.js
+#cd $sdkRoot/packages/inter-protocol/
+#yarn build:bundles
+#agoric run scripts/liquidation-visibility-upgrade.js
 
 #yarn bundle-source --cache-json $proposalRoot/bundles \
 # $sdkRoot/packages/inter-protocol/src/vaultFactory/vaultDirector.js vaultDirector
