@@ -15,6 +15,7 @@ const config = {
   featuresSrc: 'visibilityFeaturesProof.tar',
   release:
     'https://github.com/Jorge-Lopes/agoric-sdk-liquidation-visibility/releases/tag/liq-visibility-a3p-v0.1',
+  originalBundle: 'b1-ccaf7d7db13a60ab9bcdc085240a4be8ee590486a763fb2e94dbc042000af7d5fdeb54edb8bc26febde291c2f777f8c39c47bbbad2b90bcc9da570b09cafec54.json'
 };
 
 /**
@@ -78,17 +79,19 @@ test.serial('unarchive .tar and copy content under agoric-sdk', async t => {
  */
 test.serial('make sure bundle hashes match', async t => {
   // Rebuild bundles after copy
+  console.log('Building bundles...');
   await executeCommand('yarn', ['build:bundles'], {
     cwd: '/usr/src/agoric-sdk/packages/inter-protocol',
   });
 
+  console.log('Importing vaultFactory bundle...');
   const {
     default: { endoZipBase64Sha512: copiedVFaHash },
   } = await import(
     '/usr/src/agoric-sdk/packages/inter-protocol/bundles/bundle-vaultFactory.js'
   );
 
-  const { endoZipBase64Sha512: originalHash } = bundleDetail('./assets/b1-ccaf7d7db13a60ab9bcdc085240a4be8ee590486a763fb2e94dbc042000af7d5fdeb54edb8bc26febde291c2f777f8c39c47bbbad2b90bcc9da570b09cafec54.json')
+  const { endoZipBase64Sha512: originalHash } = bundleDetail(`./assets/${config.originalBundle}`)
 
   t.is(originalHash, copiedVFaHash);
 });
