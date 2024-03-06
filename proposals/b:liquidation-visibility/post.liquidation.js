@@ -5,11 +5,13 @@ import {
   makeWebCache,
   makeWebRd,
   bundleDetail,
+  proposalBuilder,
 } from '@agoric/synthetic-chain';
 import * as fsp from 'fs/promises';
 import { existsSync } from 'fs';
 import { tmpName } from 'tmp';
 import * as path from 'path';
+import { copyAll } from "./core-eval-support.js";
 
 const config = {
   featuresSrc: 'visibilityFeaturesProof.tar',
@@ -18,10 +20,7 @@ const config = {
   originalBundle: 'b1-ccaf7d7db13a60ab9bcdc085240a4be8ee590486a763fb2e94dbc042000af7d5fdeb54edb8bc26febde291c2f777f8c39c47bbbad2b90bcc9da570b09cafec54.json'
 };
 
-/**
- * TODO: Make sure to use SHA512 instead of cksum
- */
-test.serial('checksum from repo matches local one', async t => {
+test.before(async t => {
   const src = makeWebRd(config.release.replace('/tag/', '/download/') + '/', {
     fetch,
   });
@@ -32,6 +31,16 @@ test.serial('checksum from repo matches local one', async t => {
   const td = await tmpNameP('assets');
   const dest = makeFileRW(td, { fsp, path });
   const assets = makeWebCache(src, dest);
+  t.context = {
+    assets,
+  };
+})
+
+/**
+ * TODO: Make sure to use SHA512 instead of cksum
+ */
+test.serial('checksum from repo matches local one', async t => {
+  const { assets } = t.context;
   const proofPath = await assets.storedPath('visibilityFeaturesProof.tar');
 
   const [cksumWeb, cksumLocal] = (
@@ -89,7 +98,7 @@ test.serial('make sure bundle hashes match', async t => {
     default: { endoZipBase64Sha512: copiedVFaHash },
   } = await import(
     '/usr/src/agoric-sdk/packages/inter-protocol/bundles/bundle-vaultFactory.js'
-  );
+    );
 
   const { endoZipBase64Sha512: originalHash } = bundleDetail(`./assets/${config.originalBundle}`)
 
@@ -97,10 +106,65 @@ test.serial('make sure bundle hashes match', async t => {
 });
 
 /**
+ * - Prerequisites
+ *    - manualTimer contract +
+ *    - mutated auctioneer
+ *    - mutated vault factory +
+ *    - proposal
+ *    - script
+ *    - built artifacts
  * - copy mutated vaultFactory.js and auctioneer.js to relevant addresses
  * - agoric run on both of them
  */
-test.todo('build proposal for timer upgrades');
+test.skip('prepare vault factory', async t => {
+  // Prepare mutated vaultFactory
+  const rootRW = makeFileRW('.', { fsp, path });
+  const termsW = rootRW.join('./termsWrapper.js');
+  const termsR = termsW.readOnly();
+  const content = await termsR.readText();
+  console.log('TERM WRAPPER');
+  console.log(content);
+
+  const vfRW = rootRW.join('./artifacts/src/vaultFactory/vaultFactory.js');
+  const vfVersion2 = rootRW.join('./artifacts/src/vaultFactory/vaultFactoryV2.js');
+  const vfRead = vfRW.readOnly();
+  const vfText = await vfRead.readText();
+  const replaceText = 'termsWrapper(zcf.getTerms(), privateArgs);'
+  const vfMutated = vfText.replace('zcf.getTerms();', replaceText);
+  await vfVersion2.writeText(content + '\n' + vfMutated);
+
+  t.pass();
+});
+
+test.only('build proposal', async t => {
+  await copyAll([
+    {
+      src: './testAssets/manipulateAuction/auctioneerV2.js',
+      dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/auction/auctioneerV2.js'
+    },
+    {
+      src: './artifacts/src/vaultFactory/vaultFactoryV2.js',
+      dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/vaultFactory/vaultFactoryV2.js'
+    },
+    {
+      src: './testAssets/manipulateAuction/manualTimerFaucet.js',
+      dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/manualTimerFaucet.js'
+    },
+    {
+      src: './testAssets/manipulateAuction/liq-prep-proposal.js',
+      dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/proposals/liq-prep-proposal.js'
+    },
+    {
+      src: './testAssets/manipulateAuction/liq-prep-script.js',
+      dest: '/usr/src/agoric-sdk/packages/inter-protocol/scripts/liq-prep-script.js'
+    },
+  ], { fsp })
+  const { evals, bundles } = await proposalBuilder('/usr/src/agoric-sdk/packages/inter-protocol/scripts/liq-prep-script.js')
+
+  const evalsFixed = evals.map(({ script, permit }) => ({ permit, script: script.replace('-permit.json', 'js') }));
+  t.log(evalsFixed);
+  t.pass();
+});
 
 /**
  * - ensure enough IST
