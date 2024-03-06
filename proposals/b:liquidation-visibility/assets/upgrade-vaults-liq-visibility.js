@@ -6,7 +6,7 @@ const getManifestCall = harden([
   "getManifestVaultsUpgrade",
   {
     vaultFactoryRef: {
-      bundleID: "b1-c457af5e61b14f14ab68f92048747466f807ea1eb34455abd578719732a4bf5ed2781a2785eab6129bc570ffa7c88eae4bab151206a907117fc3029cd775fe2b",
+      bundleID: "b1-ccaf7d7db13a60ab9bcdc085240a4be8ee590486a763fb2e94dbc042000af7d5fdeb54edb8bc26febde291c2f777f8c39c47bbbad2b90bcc9da570b09cafec54",
     },
   },
 ]);
