@@ -245,3 +245,10 @@ export const copyAll = (config, { fsp }) => {
 
   return Promise.all(copyPs);
 }
+
+/**
+ * Use this method when you need to extract filename from a path
+ *
+ * @param {string} filePath
+ */
+export const extractNameFromPath = filePath => filePath.split('/').at(-1)

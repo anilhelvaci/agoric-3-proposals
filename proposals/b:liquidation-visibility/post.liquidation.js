@@ -6,12 +6,16 @@ import {
   makeWebRd,
   bundleDetail,
   proposalBuilder,
+  evalBundles,
 } from '@agoric/synthetic-chain';
 import * as fsp from 'fs/promises';
 import { existsSync } from 'fs';
 import { tmpName } from 'tmp';
 import * as path from 'path';
-import { copyAll } from "./core-eval-support.js";
+import {
+  copyAll,
+  extractNameFromPath,
+} from "./core-eval-support.js";
 
 const config = {
   featuresSrc: 'visibilityFeaturesProof.tar',
@@ -33,13 +37,14 @@ test.before(async t => {
   const assets = makeWebCache(src, dest);
   t.context = {
     assets,
+    tmpNameP,
   };
 })
 
 /**
  * TODO: Make sure to use SHA512 instead of cksum
  */
-test.serial('checksum from repo matches local one', async t => {
+test.skip('checksum from repo matches local one', async t => {
   const { assets } = t.context;
   const proofPath = await assets.storedPath('visibilityFeaturesProof.tar');
 
@@ -57,7 +62,7 @@ test.serial('checksum from repo matches local one', async t => {
   };
 });
 
-test.serial('unarchive .tar and copy content under agoric-sdk', async t => {
+test.skip('unarchive .tar and copy content under agoric-sdk', async t => {
   const unarchiveFolder = new URL('./artifacts', import.meta.url);
   await fsp.mkdir(unarchiveFolder);
 
@@ -86,7 +91,7 @@ test.serial('unarchive .tar and copy content under agoric-sdk', async t => {
  * Bundle hash of the vaultFactory copied from .tar must match with the one
  * used for incarnation 1.
  */
-test.serial('make sure bundle hashes match', async t => {
+test.skip('make sure bundle hashes match', async t => {
   // Rebuild bundles after copy
   console.log('Building bundles...');
   await executeCommand('yarn', ['build:bundles'], {
@@ -136,12 +141,8 @@ test.skip('prepare vault factory', async t => {
   t.pass();
 });
 
-test.only('build proposal', async t => {
+test.serial('build proposal', async t => {
   await copyAll([
-    {
-      src: './testAssets/manipulateAuction/auctioneerV2.js',
-      dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/auction/auctioneerV2.js'
-    },
     {
       src: './artifacts/src/vaultFactory/vaultFactoryV2.js',
       dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/vaultFactory/vaultFactoryV2.js'
@@ -169,6 +170,7 @@ test.only('build proposal', async t => {
     script: script.replace('-permit.json', '.js')
   }));
   t.log(evalsFixed);
+  config.proposal = { evals: evalsFixed, bundles };
   t.pass();
 });
 
@@ -180,4 +182,32 @@ test.only('build proposal', async t => {
  * - check incarnation numbers
  *    - 1 for auctioneer, 2 for vaultFactory
  */
-test.todo('deploy incarnation 2');
+test.serial('deploy incarnation 2', async t => {
+  t.log(config.proposal);
+  const { tmpNameP } = t.context;
+  const { proposal: { evals, bundles } } = config;
+  const tmpName = await tmpNameP('liq-prep');
+  await fsp.mkdir(tmpName);
+
+  const evalsCopyP = evals.flatMap(
+    ({
+       permit,
+       script
+     }) => [
+      fsp.cp(permit, `${tmpName}/${extractNameFromPath(permit)}`),
+      fsp.cp(script, `${tmpName}/${extractNameFromPath(script)}`)
+    ]);
+
+  const bundlesCopyP = bundles.map(
+    bundlePath => fsp.cp(bundlePath, `${tmpName}/${extractNameFromPath(bundlePath)}`)
+  );
+
+  await Promise.all([
+    ...evalsCopyP,
+    ...bundlesCopyP,
+  ])
+
+  t.log({ tmpName });
+  await evalBundles(tmpName);
+  t.pass();
+});
