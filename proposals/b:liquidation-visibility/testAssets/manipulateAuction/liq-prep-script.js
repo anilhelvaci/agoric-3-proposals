@@ -7,7 +7,7 @@ export const defaultProposalBuilder = async ({ publishRef, install }) => {
         getManifestCall: [
             getManifestForInitManualTimerFaucet.name,
             {
-                manualTimerTef: publishRef(install('./manualTimerFaucet.js')),
+                manualTimerRef: publishRef(install('../src/manualTimerFaucet.js')),
             },
         ],
     });
@@ -15,5 +15,5 @@ export const defaultProposalBuilder = async ({ publishRef, install }) => {
 
 export default async (homeP, endowments) => {
     const { writeCoreProposal } = await makeHelpers(homeP, endowments);
-    await writeCoreProposal('startManualTimer', defaultProposalBuilder);
+    await writeCoreProposal('prepare-test-liquidation', defaultProposalBuilder);
 };

@@ -8,7 +8,7 @@
     "@agoric/synthetic-chain": "latest",
     "@endo/zip": "^0.2.35",
     "ava": "^5.3.1",
-    "better-sqlite3": "^8.5.1",
+    "better-sqlite3": "^9.4.0",
     "execa": "^7.2.0",
     "tmp": "^0.2.1"
   },

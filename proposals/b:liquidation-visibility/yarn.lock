@@ -297,17 +297,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-sqlite3@npm:^8.5.1":
-  version: 8.7.0
-  resolution: "better-sqlite3@npm:8.7.0"
-  dependencies:
-    bindings: "npm:^1.5.0"
-    node-gyp: "npm:latest"
-    prebuild-install: "npm:^7.1.1"
-  checksum: 2583401b08531eee74c083c73f3a5902bc142b0e1c16de5b9caa92ee94f544e2cb512c214de2f762a6c83e593f26f70013214344a9ea66ace6d0619efbf04a1e
-  languageName: node
-  linkType: hard
-
 "better-sqlite3@npm:^9.4.0":
   version: 9.4.3
   resolution: "better-sqlite3@npm:9.4.3"
@@ -1957,7 +1946,7 @@ __metadata:
     "@agoric/synthetic-chain": "npm:latest"
     "@endo/zip": "npm:^0.2.35"
     ava: "npm:^5.3.1"
-    better-sqlite3: "npm:^8.5.1"
+    better-sqlite3: "npm:^9.4.0"
     execa: "npm:^7.2.0"
     tmp: "npm:^0.2.1"
   languageName: unknown

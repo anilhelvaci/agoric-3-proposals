@@ -9,16 +9,21 @@
 
 import anyTest from 'ava';
 import {
-  wellKnownIdentities,
-} from '@agoric/synthetic-chain/src/lib/cliHelper.js';
-import {
-  bundleDetail,
-  ensureISTForInstall, flags, getContractInfo,
-  loadedBundleIds, makeTestContext, readBundleSizes,
-  testIncludes,
-  txAbbr
+  makeTestContext,
+  readBundleSizes,
 } from './core-eval-support.js';
-import { voteLatestProposalAndWait, waitForBlock } from '@agoric/synthetic-chain/src/lib/commonUpgradeHelpers.js';
+import {
+  voteLatestProposalAndWait,
+  waitForBlock,
+  loadedBundleIds,
+  testIncludes,
+  txAbbr,
+  bundleDetail,
+  ensureISTForInstall,
+  flags,
+  wellKnownIdentities,
+  getContractInfo,
+} from '@agoric/synthetic-chain';
 
 /** @typedef {Awaited<ReturnType<typeof makeTestContext>>} TestContext */
 /** @type {import('ava').TestFn<TestContext>}} */
