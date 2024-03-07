@@ -159,9 +159,15 @@ test.only('build proposal', async t => {
       dest: '/usr/src/agoric-sdk/packages/inter-protocol/scripts/liq-prep-script.js'
     },
   ], { fsp })
-  const { evals, bundles } = await proposalBuilder('/usr/src/agoric-sdk/packages/inter-protocol/scripts/liq-prep-script.js')
+  const {
+    evals,
+    bundles
+  } = await proposalBuilder('/usr/src/agoric-sdk/packages/inter-protocol/scripts/liq-prep-script.js')
 
-  const evalsFixed = evals.map(({ script, permit }) => ({ permit, script: script.replace('-permit.json', 'js') }));
+  const evalsFixed = evals.map(({ script, permit }) => ({
+    permit,
+    script: script.replace('-permit.json', '.js')
+  }));
   t.log(evalsFixed);
   t.pass();
 });
