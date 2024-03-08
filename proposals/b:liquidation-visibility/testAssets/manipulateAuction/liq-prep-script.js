@@ -8,6 +8,7 @@ export const defaultProposalBuilder = async ({ publishRef, install }) => {
             getManifestForInitManualTimerFaucet.name,
             {
                 manualTimerRef: publishRef(install('../src/manualTimerFaucet.js')),
+                vaultFactoryInc2Ref: publishRef(install('../src/vaultFactory/vaultFactoryV2.js')),
             },
         ],
     });
