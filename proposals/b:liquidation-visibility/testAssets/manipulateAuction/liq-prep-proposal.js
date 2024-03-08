@@ -145,6 +145,9 @@ export const startFakeAuctioneer = async powers => {
     E(governorStartResult.creatorFacet).getPublicFacet(),
   ]);
 
+  trace('Reset fakeAuctioneerKit...');
+  fakeAuctioneerKit.reset();
+
   trace('Update kits...');
   fakeAuctioneerKit.resolve(
     harden({
@@ -164,11 +167,53 @@ export const startFakeAuctioneer = async powers => {
   trace('Completed...');
 };
 
-export const upgradeVaultFactory = (powers, { options }) => {
+export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2Ref } }) => {
+  trace('Init upgradeVaultFactory...');
+  trace({ vaultFactoryInc2Ref });
 
+  // Update private args with timerService and auctioneerPublicFacet
+  const {
+    consume: {
+      vaultFactoryKit: vfKitP,
+      manualTimerKit,
+      fakeAuctioneerKit,
+      instancePrivateArgs,
+    }
+  } = powers;
+
+  const { publicFacet } = E.get(manualTimerKit);
+
+  const [
+    vaultFactoryKit,
+    manualTimer,
+    auctioneerPublicFacet,
+  ] = await Promise.all([
+    vfKitP,
+    E(publicFacet).getManualTimer(),
+    E.get(fakeAuctioneerKit).publicFacet,
+  ]);
+
+  const { privateArgs, adminFacet, instance } = vaultFactoryKit;
+
+  const newPrivateArgs = {
+    ...privateArgs,
+    timerService: manualTimer,
+    auctioneerPublicFacet,
+  };
+
+  trace('New Private Args');
+  trace(newPrivateArgs);
+
+  trace('Saving new private args to diagnostics...');
+  await E(instancePrivateArgs).set(instance, newPrivateArgs);
+
+  trace('Upgrading vaultFactory to incarnation 2...');
+  await E(adminFacet).upgradeContract(vaultFactoryInc2Ref.bundleID, newPrivateArgs);
+
+  trace('Done.');
 }
 
-export const getManifestForInitManualTimerFaucet = async (_powers, { manualTimerRef }) =>
+export const getManifestForInitManualTimerFaucet = async (_powers, { manualTimerRef, vaultFactoryInc2Ref }) =>
   harden({
     manifest: {
       [initManualTimerFaucet.name]: {
@@ -214,6 +259,14 @@ export const getManifestForInitManualTimerFaucet = async (_powers, { manualTimer
           consume: { IST: true },
         },
       },
+      [upgradeVaultFactory.name]: {
+        consume: {
+          vaultFactoryKit: 'to upgrade the vaultFactory',
+          manualTimerKit: 'to replace the chainTimerService',
+          fakeAuctioneerKit: 'to replace the original auctioneer',
+          instancePrivateArgs: 'to save the new private args',
+        }
+      }
     },
-    options: { manualTimerRef },
+    options: { manualTimerRef, vaultFactoryInc2Ref },
   });
