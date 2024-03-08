@@ -6,6 +6,7 @@
     "reserveKit": true,
     "vBankKits": true,
     "startUpgradable": true,
+    "contractKits": true,
     "priceAuthorityAdmin": true,
     "priceAuthority": true,
     "scaledPriceAuthorityKits": true,

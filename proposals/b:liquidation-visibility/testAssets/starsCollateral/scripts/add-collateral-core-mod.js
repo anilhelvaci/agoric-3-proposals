@@ -1,10 +1,10 @@
 /* global process */
-import { makeHelpers } from '/usr/src/agoric-sdk/packages/deploy-script-support/src/helpers.js';
-import { getManifestForPsm } from '/usr/src/agoric-sdk/packages/inter-protocol/src/proposals/startPSM.js';
-import { makeInstallCache } from '/usr/src/agoric-sdk/packages/inter-protocol/src/proposals/utils.js';
-import { getManifestForAddAssetToVault } from './addAssetToVault-modified.js';
+import { makeHelpers } from '@agoric/deploy-script-support';
+import { getManifestForAddAssetToVault } from './addAssetToVault-mod.js';
+import { getManifestForPsm } from '../src/proposals/startPSM.js';
+import { makeInstallCache } from '../src/proposals/utils.js';
 
-/** @type {import('/usr/src/agoric-sdk/packages/deploy-script-support/src/externalTypes.js').ProposalBuilder} */
+/** @type {import('@agoric/deploy-script-support/src/externalTypes.js').ProposalBuilder} */
 export const defaultProposalBuilder = async (
   { publishRef, install: install0, wrapInstall },
   {
@@ -14,15 +14,14 @@ export const defaultProposalBuilder = async (
   } = {},
   { env = process.env } = {},
 ) => {
-  /** @type {import('/usr/src/agoric-sdk/packages/inter-protocol/src/proposals/addAssetToVault.js').InterchainAssetOptions} */
+  /** @type {import('./addAssetToVault-mod.js').InterchainAssetOptions} */
   const {
     issuerBoardId = env.INTERCHAIN_ISSUER_BOARD_ID,
     denom = env.INTERCHAIN_DENOM,
-    keyword = 'ATOM',
-    issuerName = keyword,
-    oracleBrand = issuerName,
+    oracleBrand = 'ATOM',
     decimalPlaces = 6,
-    proposedName = issuerName,
+    keyword = 'ATOM',
+    proposedName = oracleBrand,
     initialPrice = undefined,
   } = interchainAssetOptions;
 
@@ -33,7 +32,7 @@ export const defaultProposalBuilder = async (
   const install = wrapInstall ? wrapInstall(install0) : install0;
 
   return harden({
-    sourceSpec: './addAssetToVault-modified.js',
+    sourceSpec: './addAssetToVault-mod.js',
     getManifestCall: [
       getManifestForAddAssetToVault.name,
       {
@@ -45,14 +44,13 @@ export const defaultProposalBuilder = async (
           decimalPlaces,
           initialPrice,
           keyword,
-          issuerName,
           proposedName,
           oracleBrand,
         },
         scaledPriceAuthorityRef: publishRef(
           install(
-            '/usr/src/agoric-sdk/packages/zoe/src/contracts/scaledPriceAuthority.js',
-            '/usr/src/agoric-sdk/packages/builders/scripts/bundles/bundle-scaledPriceAuthority.js',
+            '@agoric/zoe/src/contracts/scaledPriceAuthority.js',
+            '../bundles/bundle-scaledPriceAuthority.js',
             { persist: true },
           ),
         ),
@@ -61,7 +59,7 @@ export const defaultProposalBuilder = async (
   });
 };
 
-/** @type {import('/usr/src/agoric-sdk/packages/deploy-script-support/src/externalTypes.js').ProposalBuilder} */
+/** @type {import('@agoric/deploy-script-support/src/externalTypes.js').ProposalBuilder} */
 export const psmProposalBuilder = async (
   { publishRef, install: install0, wrapInstall },
   { anchorOptions = /** @type {object} */ ({}) } = {},
@@ -74,7 +72,7 @@ export const psmProposalBuilder = async (
   const install = wrapInstall ? wrapInstall(install0) : install0;
 
   return harden({
-    sourceSpec: '/usr/src/agoric-sdk/packages/inter-protocol/src/proposals/startPSM.js',
+    sourceSpec: '../src/proposals/startPSM.js',
     getManifestCall: [
       getManifestForPsm.name,
       {
@@ -85,15 +83,12 @@ export const psmProposalBuilder = async (
         },
         installKeys: {
           psm: publishRef(
-            install(
-              '/usr/src/agoric-sdk/packages/inter-protocol/src/psm/psm.js',
-              '/usr/src/agoric-sdk/packages/builders/scripts/bundles/bundle-psm.js',
-            ),
+            install('../src/psm/psm.js', '../bundles/bundle-psm.js'),
           ),
           mintHolder: publishRef(
             install(
-              '/usr/src/agoric-sdk/packages/vats/src/mintHolder.js',
-              '/usr/src/agoric-sdk/packages/vats/bundles/bundle-mintHolder.js',
+              '@agoric/vats/src/mintHolder.js',
+              '../../vats/bundles/bundle-mintHolder.js',
             ),
           ),
         },

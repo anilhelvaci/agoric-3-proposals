@@ -1,7 +1,6 @@
 import { makeHelpers } from '/usr/src/agoric-sdk/packages/deploy-script-support/src/helpers.js';
-import { defaultProposalBuilder as vaultProposalBuilder } from '/usr/src/agoric-sdk/packages/inter-protocol/scripts/add-collateral-core.js';
+import { defaultProposalBuilder as vaultProposalBuilder } from './add-collateral-core-mod.js';
 import { defaultProposalBuilder as oraclesProposalBuilder } from '/usr/src/agoric-sdk/packages/inter-protocol/scripts/price-feed-core.js';
-import { makeInstallCache } from '/usr/src/agoric-sdk/packages/inter-protocol/src/proposals/utils.js';
 import fs from 'fs';
 
 /** @type {import('@agoric/deploy-script-support/src/externalTypes.js').ProposalBuilder} */
@@ -24,16 +23,13 @@ export const starsVaultProposalBuilder = async powers => {
  */
 export const getAgoricAddress = keyName => {
   const pathInfo = `/root/.agoric/${keyName}.out`;
-  const keyData = fs.readFileSync(
-      pathInfo,
-      { encoding: 'utf-8', flag: 'r' },
-  );
+  const keyData = fs.readFileSync(pathInfo, { encoding: 'utf-8', flag: 'r' });
 
   const pathMnemonic = `/root/.agoric/${keyName}.key`;
-  const keyMnemonic = fs.readFileSync(
-      pathMnemonic,
-      { encoding: 'utf-8', flag: 'r' },
-  );
+  const keyMnemonic = fs.readFileSync(pathMnemonic, {
+    encoding: 'utf-8',
+    flag: 'r',
+  });
 
   const nameExp = /name: (.*)\n/;
   const typeExp = /type: (.*)\n/;
@@ -41,13 +37,13 @@ export const getAgoricAddress = keyName => {
   const pubkeyExp = /pubkey: (.*)\n/;
 
   return {
-      name: nameExp.exec(keyData)[1],
-      type: typeExp.exec(keyData)[1],
-      address: addressExp.exec(keyData)[1],
-      pubkey: pubkeyExp.exec(keyData)[1],
-      mnemonic: keyMnemonic.split('\n')[0],
+    name: nameExp.exec(keyData)[1],
+    type: typeExp.exec(keyData)[1],
+    address: addressExp.exec(keyData)[1],
+    pubkey: pubkeyExp.exec(keyData)[1],
+    mnemonic: keyMnemonic.split('\n')[0],
   };
-}
+};
 
 /** @type {import('@agoric/deploy-script-support/src/externalTypes.js').ProposalBuilder} */
 export const starsOraclesProposalBuilder = async powers => {

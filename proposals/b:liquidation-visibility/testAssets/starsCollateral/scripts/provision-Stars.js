@@ -1,5 +1,6 @@
 import { makeHelpers } from '@agoric/deploy-script-support';
 import { getManifest } from './provision-stars-manifest.js';
+import fs from 'fs';
 
 /**
  * @param {string} keyName gov1, gov2...
