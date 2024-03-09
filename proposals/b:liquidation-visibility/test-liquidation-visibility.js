@@ -115,7 +115,7 @@ test.serial('bundles not yet installed', async t => {
 test.serial('ensure enough IST to install bundles', async t => {
   const { agd, config, src } = t.context;
   // @ts-ignore
-  const { totalSize, bundleSizes } = await readBundleSizes(src, staticConfig);
+  const { totalSize, bundleSizes } = await readBundleSizes(src, staticConfig.buildInfo);
   console.log({ totalSize, bundleSizes });
   await ensureISTForInstall(agd, config, totalSize, {
     log: t.log,

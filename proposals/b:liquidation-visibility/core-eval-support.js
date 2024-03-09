@@ -69,10 +69,9 @@ export const getFileSize = async (src, fileName) => {
 };
 
 /** @param {import('@agoric/synthetic-chain').FileRW} src
- * @param config
+ * @param info
  */
-export const readBundleSizes = async (src, config) => {
-  const info = config.buildInfo;
+export const readBundleSizes = async (src, info) => {
   const bundleSizes = await Promise.all(
     info
       .map(({ bundles }) =>

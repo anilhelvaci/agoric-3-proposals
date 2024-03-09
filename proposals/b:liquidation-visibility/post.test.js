@@ -11,6 +11,7 @@ import {
   testIncludes,
   flags,
   txAbbr,
+  agd,
 } from '@agoric/synthetic-chain';
 import fs from 'fs';
 import {
@@ -140,9 +141,12 @@ test.serial('bundles not yet installed', async t => {
   }
 });
 
-test.serial('ensure enough IST to install bundles', async t => {
+test.serial('ensure enough IST to install collateral bundles', async t => {
   const { agd, config, src } = t.context;
-  const { totalSize, bundleSizes } = await readBundleSizes(src, staticConfig);
+  const { totalSize, bundleSizes } = await readBundleSizes(
+    src,
+    staticConfig.buildInfo,
+  );
   console.log({ totalSize, bundleSizes });
   await ensureISTForInstall(agd, config, totalSize, {
     log: t.log,
@@ -310,7 +314,20 @@ test.serial('build proposal for STARS provision', async t => {
   t.pass();
 });
 
-test.serial.only('ensure STARS provision bundles installed', async t => {
+test.serial('ensure enough IST to install provision bundles', async t => {
+  const { agd, config, src } = t.context;
+  const { totalSize, bundleSizes } = await readBundleSizes(
+    src,
+    staticConfig.provisionInfo,
+  );
+  console.log({ totalSize, bundleSizes });
+  await ensureISTForInstall(agd, config, totalSize, {
+    log: t.log,
+  });
+  t.pass();
+});
+
+test.serial('ensure STARS provision bundles installed', async t => {
   const { agd, swingstore, agoric, config } = t.context;
   const { chainId } = config;
   const loaded = loadedBundleIds(swingstore);
@@ -327,6 +344,8 @@ test.serial.only('ensure STARS provision bundles installed', async t => {
         done += 1;
         continue;
       }
+
+      console.log('Log: ', fileName);
 
       const result = await agd.tx(
         [
@@ -354,7 +373,7 @@ test.serial.only('ensure STARS provision bundles installed', async t => {
   t.is(todo, done);
 });
 
-test.serial.skip('core eval proposal for STARS provision passes', async t => {
+test.serial('core eval proposal for STARS provision passes', async t => {
   const { agd, swingstore, config, src } = t.context;
   const from = agd.lookup(config.proposer);
   const { chainId, deposit, instance } = config;
@@ -406,6 +425,28 @@ test.serial.skip('core eval proposal for STARS provision passes', async t => {
   await waitForBlock(15);
 
   t.is(detail.status, 'PROPOSAL_STATUS_PASSED');
+});
+
+test.serial('ensure user1 is provisioned with STARS', async t => {
+  const { config } = t.context;
+
+  const address = await agd.keys(
+    'show',
+    config.installer,
+    '-a',
+    '--keyring-backend=test',
+  );
+  const balances = (await agd.query('bank', 'balances', `${address}`)).balances;
+  t.log('Log: from', balances);
+
+  for (const balance of balances) {
+    if (
+      balance.denom ===
+      'ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4'
+    ) {
+      t.is(balance.amount, '1000000000000000000000');
+    }
+  }
 });
 
 test.todo('open vaults');
