@@ -54,9 +54,8 @@ export const startFakeAuctioneer = async powers => {
       economicCommitteeCreatorFacet: electorateCreatorFacet,
       manualTimerKit,
     },
-    produce: { auctioneerKit },
+    produce: { fakeAuctioneerKit },
     instance: {
-      produce: { auctioneer: auctionInstance },
       consume: { reserve: reserveInstance },
     },
     installation: {
@@ -146,10 +145,10 @@ export const startFakeAuctioneer = async powers => {
   ]);
 
   trace('Reset fakeAuctioneerKit...');
-  auctioneerKit.reset();
+  fakeAuctioneerKit.reset();
 
   trace('Update kits...');
-  auctioneerKit.resolve(
+  fakeAuctioneerKit.resolve(
     harden({
       label: 'fakeAuctioneer',
       creatorFacet: governedCreatorFacet,
@@ -163,9 +162,6 @@ export const startFakeAuctioneer = async powers => {
     }),
   );
 
-  trace('Reset auctioneer instance...');
-  auctionInstance.reset();
-  auctionInstance.resolve(governedInstance);
   trace('Completed...');
 };
 
@@ -179,6 +175,7 @@ export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2R
       vaultFactoryKit: vfKitP,
       manualTimerKit,
       auctioneerKit,
+      fakeAuctioneerKit: fakeAuctioneerKitP,
       instancePrivateArgs,
     }
   } = powers;
@@ -189,10 +186,12 @@ export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2R
     vaultFactoryKit,
     manualTimer,
     auctioneerPublicFacet,
+    fakeAuctioneerKit,
   ] = await Promise.all([
     vfKitP,
     E(publicFacet).getManualTimer(),
-    E.get(auctioneerKit).publicFacet,
+    E.get(fakeAuctioneerKitP).publicFacet,
+    fakeAuctioneerKitP
   ]);
 
   const { privateArgs, adminFacet, instance } = vaultFactoryKit;
@@ -211,6 +210,12 @@ export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2R
 
   trace('Upgrading vaultFactory to incarnation 2...');
   await E(adminFacet).upgradeContract(vaultFactoryInc2Ref.bundleID, newPrivateArgs);
+
+  // We do this after upgrading the vaultFactory to make sure it's upgraded
+  // with the correct auctioneer version
+  trace('Override original auctioneer with the fake one...');
+  auctioneerKit.reset();
+  auctioneerKit.resolve(fakeAuctioneerKit);
 
   trace('Done.');
 }
@@ -266,6 +271,7 @@ export const getManifestForInitManualTimerFaucet = async (_powers, { manualTimer
           vaultFactoryKit: 'to upgrade the vaultFactory',
           manualTimerKit: 'to replace the chainTimerService',
           auctioneerKit: 'to replace the original auctioneer',
+          fakeAuctioneerKit: 'to replace the original auctioneer',
           instancePrivateArgs: 'to save the new private args',
         }
       }

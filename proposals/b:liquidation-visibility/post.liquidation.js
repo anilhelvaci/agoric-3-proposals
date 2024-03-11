@@ -141,13 +141,49 @@ test.serial('prepare vault factory', async t => {
   console.log('TERM WRAPPER');
   console.log(content);
 
+  const replaceText = 'termsWrapper(zcf.getTerms(), privateArgs);'
+
+  // Make vaultManager use the custom timer
+  const vmRW = rootRW.join('./artifacts/src/vaultFactory/vaultManager.js');
+  const vmVersion2 = rootRW.join('./artifacts/src/vaultFactory/vaultManagerV2.js');
+  const vmRead = vmRW.readOnly();
+  const vmText = await vmRead.readText();
+  const vmMutated = vmText.replace('{ zcf, marshaller, makeRecorderKit,' +
+    ' factoryPowers }', '{ zcf, marshaller, makeRecorderKit, factoryPowers,' +
+    ' timerService }').replace('{ priceAuthority, timerService,' +
+    ' reservePublicFacet' +
+    ' }', '{ priceAuthority, reservePublicFacet }');
+  await vmVersion2.writeText(content + '\n' + vmMutated);
+
+  // Make vaultDirector forward the custom timer
+  const vdRW = rootRW.join('./artifacts/src/vaultFactory/vaultDirector.js');
+  const vdVersion2 = rootRW.join('./artifacts/src/vaultFactory/vaultDirectorV2.js');
+  const vdRead = vdRW.readOnly();
+  const vdText = await vdRead.readText();
+  const vdMutated = vdText.replace('./vaultManager', './vaultManagerV2').replace('\n' +
+    '    makeERecorderKit,\n' +
+    '    makeRecorderKit,\n' +
+    '    marshaller,\n' +
+    '    factoryPowers,\n' +
+    '    zcf,\n' +
+    '  }', '\n' +
+    '    makeERecorderKit,\n' +
+    '    makeRecorderKit,\n' +
+    '    marshaller,\n' +
+    '    factoryPowers,\n' +
+    '    zcf,\n' +
+    '    timerService: timer,\n' +
+    '  }');
+  await vdVersion2.writeText(vdMutated);
+
+  // Override vaultFactory zcf.getTerms();
   const vfRW = rootRW.join('./artifacts/src/vaultFactory/vaultFactory.js');
   const vfVersion2 = rootRW.join('./artifacts/src/vaultFactory/vaultFactoryV2.js');
   const vfRead = vfRW.readOnly();
   const vfText = await vfRead.readText();
-  const replaceText = 'termsWrapper(zcf.getTerms(), privateArgs);'
-  const vfMutated = vfText.replace('zcf.getTerms();', replaceText);
-  await vfVersion2.writeText(content + '\n' + vfMutated);
+  const vfMutatedTermsOnly = vfText.replace('zcf.getTerms();', replaceText);
+  const vfMutatedFinal = vfMutatedTermsOnly.replace('./vaultDirector', './vaultDirectorV2');
+  await vfVersion2.writeText(content + '\n' + vfMutatedFinal);
 
   t.pass();
 });
@@ -157,6 +193,14 @@ test.serial('build proposal', async t => {
     {
       src: './artifacts/src/vaultFactory/vaultFactoryV2.js',
       dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/vaultFactory/vaultFactoryV2.js'
+    },
+    {
+      src: './artifacts/src/vaultFactory/vaultManagerV2.js',
+      dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/vaultFactory/vaultManagerV2.js'
+    },
+    {
+      src: './artifacts/src/vaultFactory/vaultDirectorV2.js',
+      dest: '/usr/src/agoric-sdk/packages/inter-protocol/src/vaultFactory/vaultDirectorV2.js'
     },
     {
       src: './testAssets/manipulateAuction/manualTimerFaucet.js',
