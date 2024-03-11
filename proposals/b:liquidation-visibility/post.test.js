@@ -29,7 +29,7 @@ import {
 const assetInfo = {
   /** @type {Record<string, ProposalInfo>} */
   buildAssets: {
-    addCollateral: {
+    addOracle: {
       evals: [
         { permit: 'add-STARS-oracles-permit.json', script: 'add-STARS-oracles.js' },
       ],
@@ -38,7 +38,7 @@ const assetInfo = {
         'b1-f8d93fe2fd201b55d06eee58888b4a7d857fa4972bd9d62166498d30799b325b74dbaff8134d3b80c9f9198c8078ec3a22d0e41946371bdd39b532c1a47568ec.json'
       ],
     },
-    addOracle: {
+    addCollateral: {
       evals: [
         { permit: 'add-STARS-prop-permit.json', script: 'add-STARS-prop.js' },
       ],
@@ -184,7 +184,7 @@ test.serial('core eval proposal passes', async t => {
       'swingset-core-eval',
       ...evalPaths,
       ...flags({ ...info, deposit }),
-      ...flags({ gas: '120000000', 'gas-adjustment': '1.2' }),
+      ...flags({ gas: 'auto', 'gas-adjustment': '1.2' }),
     ],
     { from, chainId, yes: true },
   );

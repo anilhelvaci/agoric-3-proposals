@@ -13,7 +13,8 @@
     "tmp": "^0.2.1"
   },
   "scripts": {
-    "agops": "yarn --cwd /usr/src/agoric-sdk/ --silent agops"
+    "agops": "yarn --cwd /usr/src/agoric-sdk/ --silent agops",
+    "test": "yarn ava --no-worker-threads"
   },
   "ava": {
     "timeout": "300s"
