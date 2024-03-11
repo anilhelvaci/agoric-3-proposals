@@ -72,7 +72,7 @@ test.before(async t => (t.context = await makeTestContext({
 /**
  * Remove 'skip' to generate the assets that adds a new collateral to vault factory.
  */
-test.serial.skip('build-proposal', async t => {
+test.serial('build-proposal', async t => {
   const dstPath = '/usr/src/agoric-sdk/packages/inter-protocol/scripts/add-STARS.js';
   if (!fs.existsSync(dstPath)) {
     fs.copyFileSync('./testAssets/starsCollateral/add-STARS.js', dstPath);

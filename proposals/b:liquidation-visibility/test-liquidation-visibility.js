@@ -23,6 +23,7 @@ import {
   flags,
   wellKnownIdentities,
   getContractInfo,
+  mintIST,
 } from '@agoric/synthetic-chain';
 
 /** @typedef {Awaited<ReturnType<typeof makeTestContext>>} TestContext */
@@ -137,7 +138,18 @@ test.serial('ensure bundles installed', async t => {
   t.is(todo, done);
 });
 
-test.serial('core eval proposal passes', async t => {
+test.serial('fund user1 before the upgrade', async t => {
+  const { agd } = t.context;
+  const addr = agd.lookup(staticConfig.installer);
+  const unit = 1_000_000;
+  const giveValue = 10_000_000;
+  const sendValue = giveValue * unit;
+  const wantMinted = 1_000_000;
+  await mintIST(addr, sendValue, wantMinted, giveValue);
+  t.pass();
+});
+
+test.serial.only('core eval proposal passes', async t => {
   const { agd, swingstore, config, mkTempRW, src } = t.context;
   const from = agd.lookup(config.proposer);
   const { chainId, deposit, instance } = config;
