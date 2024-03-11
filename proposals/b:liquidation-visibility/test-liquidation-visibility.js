@@ -149,7 +149,7 @@ test.serial('fund user1 before the upgrade', async t => {
   t.pass();
 });
 
-test.serial.only('core eval proposal passes', async t => {
+test.serial('core eval proposal passes', async t => {
   const { agd, swingstore, config, mkTempRW, src } = t.context;
   const from = agd.lookup(config.proposer);
   const { chainId, deposit, instance } = config;

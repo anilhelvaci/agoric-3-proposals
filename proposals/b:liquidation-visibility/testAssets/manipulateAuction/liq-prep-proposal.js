@@ -54,9 +54,9 @@ export const startFakeAuctioneer = async powers => {
       economicCommitteeCreatorFacet: electorateCreatorFacet,
       manualTimerKit,
     },
-    produce: { fakeAuctioneerKit },
+    produce: { auctioneerKit },
     instance: {
-      produce: { fakeAuctioneer: auctionInstance },
+      produce: { auctioneer: auctionInstance },
       consume: { reserve: reserveInstance },
     },
     installation: {
@@ -146,10 +146,10 @@ export const startFakeAuctioneer = async powers => {
   ]);
 
   trace('Reset fakeAuctioneerKit...');
-  fakeAuctioneerKit.reset();
+  auctioneerKit.reset();
 
   trace('Update kits...');
-  fakeAuctioneerKit.resolve(
+  auctioneerKit.resolve(
     harden({
       label: 'fakeAuctioneer',
       creatorFacet: governedCreatorFacet,
@@ -163,6 +163,8 @@ export const startFakeAuctioneer = async powers => {
     }),
   );
 
+  trace('Reset auctioneer instance...');
+  auctionInstance.reset();
   auctionInstance.resolve(governedInstance);
   trace('Completed...');
 };
@@ -176,7 +178,7 @@ export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2R
     consume: {
       vaultFactoryKit: vfKitP,
       manualTimerKit,
-      fakeAuctioneerKit,
+      auctioneerKit,
       instancePrivateArgs,
     }
   } = powers;
@@ -190,7 +192,7 @@ export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2R
   ] = await Promise.all([
     vfKitP,
     E(publicFacet).getManualTimer(),
-    E.get(fakeAuctioneerKit).publicFacet,
+    E.get(auctioneerKit).publicFacet,
   ]);
 
   const { privateArgs, adminFacet, instance } = vaultFactoryKit;
@@ -239,14 +241,14 @@ export const getManifestForInitManualTimerFaucet = async (_powers, { manualTimer
           manualTimerKit: true,
         },
         produce: {
-          fakeAuctioneerKit: true,
+          auctioneerKit: true,
         },
         instance: {
           consume: {
             reserve: true,
           },
           produce: {
-            fakeAuctioneer: true,
+            auctioneer: true,
           },
         },
         installation: {
@@ -263,7 +265,7 @@ export const getManifestForInitManualTimerFaucet = async (_powers, { manualTimer
         consume: {
           vaultFactoryKit: 'to upgrade the vaultFactory',
           manualTimerKit: 'to replace the chainTimerService',
-          fakeAuctioneerKit: 'to replace the original auctioneer',
+          auctioneerKit: 'to replace the original auctioneer',
           instancePrivateArgs: 'to save the new private args',
         }
       }

@@ -6,7 +6,8 @@ import {
   makeWebRd,
   bundleDetail,
   proposalBuilder,
-  evalBundles,
+  readBundles,
+  passCoreEvalProposal,
 } from '@agoric/synthetic-chain';
 import * as fsp from 'fs/promises';
 import { existsSync } from 'fs';
@@ -18,6 +19,8 @@ import {
 } from "./core-eval-support.js";
 
 const config = {
+  installer: 'user1',
+  proposer: 'validator',
   featuresSrc: 'visibilityFeaturesProof.tar',
   release:
     'https://github.com/Jorge-Lopes/agoric-sdk-liquidation-visibility/releases/tag/liq-visibility-a3p-v0.1',
@@ -44,7 +47,7 @@ test.before(async t => {
 /**
  * TODO: Make sure to use SHA512 instead of cksum
  */
-test.skip('checksum from repo matches local one', async t => {
+test.serial('checksum from repo matches local one', async t => {
   const { assets } = t.context;
   const proofPath = await assets.storedPath('visibilityFeaturesProof.tar');
 
@@ -62,9 +65,17 @@ test.skip('checksum from repo matches local one', async t => {
   };
 });
 
-test.skip('unarchive .tar and copy content under agoric-sdk', async t => {
+test.serial('unarchive .tar and copy content under agoric-sdk', async t => {
   const unarchiveFolder = new URL('./artifacts', import.meta.url);
-  await fsp.mkdir(unarchiveFolder);
+
+  try {
+    await fsp.rmdir(unarchiveFolder, { recursive: true });
+  } catch (e) {
+    t.log('Artifacts do not exist');
+  } finally {
+    await fsp.mkdir(unarchiveFolder);
+  }
+
 
   await executeCommand('tar', [
     '-xf',
@@ -91,7 +102,7 @@ test.skip('unarchive .tar and copy content under agoric-sdk', async t => {
  * Bundle hash of the vaultFactory copied from .tar must match with the one
  * used for incarnation 1.
  */
-test.skip('make sure bundle hashes match', async t => {
+test.serial('make sure bundle hashes match', async t => {
   // Rebuild bundles after copy
   console.log('Building bundles...');
   await executeCommand('yarn', ['build:bundles'], {
@@ -121,7 +132,7 @@ test.skip('make sure bundle hashes match', async t => {
  * - copy mutated vaultFactory.js and auctioneer.js to relevant addresses
  * - agoric run on both of them
  */
-test.skip('prepare vault factory', async t => {
+test.serial('prepare vault factory', async t => {
   // Prepare mutated vaultFactory
   const rootRW = makeFileRW('.', { fsp, path });
   const termsW = rootRW.join('./termsWrapper.js');
@@ -208,6 +219,11 @@ test.serial('deploy incarnation 2', async t => {
   ])
 
   t.log({ tmpName });
-  await evalBundles(tmpName);
+  const bundleInfos = await readBundles(tmpName);
+
+  await passCoreEvalProposal(
+    bundleInfos,
+    { title: `Core eval of ${tmpName}`, ...config }
+  );
   t.pass();
 });
