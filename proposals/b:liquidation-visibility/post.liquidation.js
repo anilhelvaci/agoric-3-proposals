@@ -153,7 +153,7 @@ test.serial('prepare vault factory', async t => {
     ' timerService }').replace('{ priceAuthority, timerService,' +
     ' reservePublicFacet' +
     ' }', '{ priceAuthority, reservePublicFacet }');
-  await vmVersion2.writeText(content + '\n' + vmMutated);
+  await vmVersion2.writeText(vmMutated);
 
   // Make vaultDirector forward the custom timer
   const vdRW = rootRW.join('./artifacts/src/vaultFactory/vaultDirector.js');

@@ -2,21 +2,16 @@ import test from 'ava';
 import {
   executeCommand,
   agoric,
-  voteLatestProposalAndWait,
-  waitForBlock, getContractInfo,
-  loadedBundleIds,
-  bundleDetail,
-  ensureISTForInstall,
-  testIncludes,
-  flags,
-  txAbbr,
+  getContractInfo,
+  readBundles,
+  passCoreEvalProposal,
 } from "@agoric/synthetic-chain";
 import fs from 'fs';
 import {
   acceptsOracleInvitations,
   makeTestContext,
-  poll, pushPrice,
-  readBundleSizes,
+  poll,
+  pushPrice,
 } from "./core-eval-support.js";
 
 /**
@@ -38,13 +33,22 @@ const assetInfo = {
         'b1-f8d93fe2fd201b55d06eee58888b4a7d857fa4972bd9d62166498d30799b325b74dbaff8134d3b80c9f9198c8078ec3a22d0e41946371bdd39b532c1a47568ec.json'
       ],
     },
+    addAsset: {
+      evals: [
+        { permit: 'add-STARS-asset-permit.json', script: 'add-STARS-asset.js' },
+      ],
+      bundles: [
+        'b1-7b19e4d6f6b67050a3b8a7b2ddda55231b0309b44556740ced6a89f6a2135b27920ea19c257258ca585aba8c5d71c38aa4527992b23df2c58456f29a0de274ac.json',
+        'b1-ec50836896d227c58f516d455fe8711425da908d14bb763cf98a18a9ac6757acd9b4fca73e8a0b2771959beaabc46945adee197a92d4e79ad9f31749d3f4d498.json'
+      ],
+    },
     addCollateral: {
       evals: [
         { permit: 'add-STARS-prop-permit.json', script: 'add-STARS-prop.js' },
       ],
       bundles: [
-        'b1-ec50836896d227c58f516d455fe8711425da908d14bb763cf98a18a9ac6757acd9b4fca73e8a0b2771959beaabc46945adee197a92d4e79ad9f31749d3f4d498.json',
-        'b1-d60c4dc7d7ac890d3840b427416e2696c804de632469a69e127075d753cebab7eb9e2b7ef64fc3dfd261c032df6fbb176b53818b73ff2b61faaee226fdb7a2a7.json'
+        'b1-7b19e4d6f6b67050a3b8a7b2ddda55231b0309b44556740ced6a89f6a2135b27920ea19c257258ca585aba8c5d71c38aa4527992b23df2c58456f29a0de274ac.json',
+        'b1-ec50836896d227c58f516d455fe8711425da908d14bb763cf98a18a9ac6757acd9b4fca73e8a0b2771959beaabc46945adee197a92d4e79ad9f31749d3f4d498.json'
       ],
     },
   },
@@ -56,7 +60,8 @@ const staticConfig = {
   proposer: 'validator',
   collateralPrice: 6,
   swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
-  buildInfo: Object.values(assetInfo.buildAssets),
+  buildAddAssetInfo: Object.values({ ...assetInfo.buildAssets.addOracle, ...assetInfo.buildAssets.addAsset }),
+  buildAddCollateralInfo: [assetInfo.buildAssets.addCollateral],
   initialCoins: `20000000ubld`,
   oracles: [
     { address: 'gov1', acceptId: 'gov1-accept-invite'},
@@ -65,14 +70,14 @@ const staticConfig = {
 };
 
 test.before(async t => (t.context = await makeTestContext({
-  testConfig: staticConfig,
-  srcDir: 'testAssets/starsCollateral'
+  testConfig: staticConfig
 })));
 
 /**
  * Remove 'skip' to generate the assets that adds a new collateral to vault factory.
+ * TODO: Add a read me on how to build the proposal
  */
-test.serial('build-proposal', async t => {
+test.serial.skip('build-proposal', async t => {
   const dstPath = '/usr/src/agoric-sdk/packages/inter-protocol/scripts/add-STARS.js';
   if (!fs.existsSync(dstPath)) {
     fs.copyFileSync('./testAssets/starsCollateral/add-STARS.js', dstPath);
@@ -83,124 +88,27 @@ test.serial('build-proposal', async t => {
   t.pass();
 });
 
-test.serial('bundles not yet installed', async t => {
-  const { swingstore, src } = t.context;
-  const loaded = loadedBundleIds(swingstore);
-  const info = staticConfig.buildInfo;
-
-  for await (const { bundles, evals } of info) {
-    t.log(evals[0].script, evals.length, 'eval', bundles.length, 'bundles');
-
-    for await (const bundle of bundles) {
-      const detail = bundleDetail(bundle);
-      console.log({ detail });
-      const { id } = detail;
-      testIncludes(t, id, loaded, 'loaded bundles', false);
-    }
-  }
-});
-
-test.serial('ensure enough IST to install bundles', async t => {
-  const { agd, config, src } = t.context;
-  const { totalSize, bundleSizes } = await readBundleSizes(src, staticConfig);
-  console.log({ totalSize, bundleSizes });
-  await ensureISTForInstall(agd, config, totalSize, {
-    log: t.log,
-  });
+test.serial('add STARS asset', async t => {
+  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/addStarsAsset';
+  const bundleInfos = await readBundles(propDir);
+  await passCoreEvalProposal(
+    bundleInfos,
+    { title: `Core eval of ${propDir}`, installer: 'user1'}
+  );
+  t.log(bundleInfos);
   t.pass();
 });
 
-test.serial('ensure bundles installed', async t => {
-  const { agd, swingstore, agoric, config } = t.context;
-  const { chainId } = config;
-  const loaded = loadedBundleIds(swingstore);
-  const from = agd.lookup(config.installer);
-
-  let todo = 0;
-  let done = 0;
-  for await (const { bundles } of staticConfig.buildInfo) {
-    todo += bundles.length;
-    for await (const bundle of bundles) {
-      const { id, endoZipBase64Sha512, fileName } = bundleDetail(
-        bundle
-      );
-      if (loaded.includes(id)) {
-        t.log('bundle already installed', id);
-        done += 1;
-        continue;
-      }
-
-      const result = await agd.tx(
-        ['swingset', 'install-bundle', `@./testAssets/starsCollateral/${fileName}`, '--gas', '120000000'],
-        { from, chainId, yes: true },
-      );
-      t.log(txAbbr(result));
-      t.is(result.code, 0);
-
-      const info = await getContractInfo('bundles', { agoric, prefix: '' });
-      t.log(info);
-      done += 1;
-      t.deepEqual(info, {
-        endoZipBase64Sha512,
-        error: null,
-        installed: true,
-      });
-    }
-  }
-  t.is(todo, done);
-});
-
-test.serial('core eval proposal passes', async t => {
-  const { agd, swingstore, config, src } = t.context;
-  const from = agd.lookup(config.proposer);
-  const { chainId, deposit, instance } = config;
-  const info = { title: instance, description: `start ${instance}` };
-  t.log('submit proposal', instance);
-
-  // double-check that bundles are loaded
-  const loaded = loadedBundleIds(swingstore);
-  const { buildInfo } = staticConfig;
-  for (const { bundles } of buildInfo) {
-    for (const bundle of bundles) {
-      const { id } = bundleDetail(bundle);
-      testIncludes(t, id, loaded, 'loaded bundles');
-    }
-  }
-
-  const evalNames = buildInfo
-    .map(({ evals }) => evals)
-    .flat()
-    .map(e => [e.permit, e.script])
-    .flat();
-  const evalPaths = await Promise.all(evalNames.map(evalName => {
-    return src.join(evalName).toString();
-  }));
-  t.log(evalPaths);
-  console.log('await tx', evalPaths);
-  const result = await agd.tx(
-    [
-      'gov',
-      'submit-proposal',
-      'swingset-core-eval',
-      ...evalPaths,
-      ...flags({ ...info, deposit }),
-      ...flags({ gas: 'auto', 'gas-adjustment': '1.2' }),
-    ],
-    { from, chainId, yes: true },
+test.serial('add STARS collateral', async t => {
+  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/addStarsCollateral';
+  const bundleInfos = await readBundles(propDir);
+  await passCoreEvalProposal(
+    bundleInfos,
+    { title: `Core eval of ${propDir}`, installer: 'user1'}
   );
-  console.log('RESULT', { result });
-  t.log(txAbbr(result));
-  t.is(result.code, 0);
-
-  console.log('await voteLatestProposalAndWait', evalPaths);
-  const detail = await voteLatestProposalAndWait();
-  t.log(detail.proposal_id, detail.voting_end_time, detail.status);
-
-  // XXX https://github.com/Agoric/agoric-3-proposals/issues/91
-  await waitForBlock(15);
-
-  t.is(detail.status, 'PROPOSAL_STATUS_PASSED');
-})
+  t.log(bundleInfos);
+  t.pass();
+});
 
 test.serial('STARS is added as a collateral', async t => {
   const { agoric } = t.context;
