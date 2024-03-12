@@ -61,7 +61,7 @@ const staticConfig = {
   ...dappAPI,
 };
 
-test.before(async t => (t.context = await makeTestContext({ testConfig: staticConfig })));
+test.before(async t => (t.context = await makeTestContext({ testConfig: staticConfig, srcDir: 'assets' })));
 
 test.serial(`pre-flight: not in agoricNames.instance`, async t => {
   const { config, agoric } = t.context;

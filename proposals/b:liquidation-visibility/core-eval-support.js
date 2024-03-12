@@ -17,7 +17,7 @@ import fspAmbient from "fs/promises";
 import pathAmbient from "path";
 import { tmpName as tmpNameAmbient } from "tmp";
 
-export const makeTestContext = async ({ io = {}, testConfig, srcDir = 'assets' }) => {
+export const makeTestContext = async ({ io = {}, testConfig, srcDir }) => {
   const {
     process: { env, cwd } = processAmbient,
     child_process: { execFileSync } = cpAmbient,
@@ -27,7 +27,7 @@ export const makeTestContext = async ({ io = {}, testConfig, srcDir = 'assets' }
     tmpName = tmpNameAmbient,
   } = io;
 
-  const src = makeFileRd(`${cwd()}/${srcDir}`, { fsp, path });
+  const src = srcDir ? makeFileRd(`${cwd()}/${srcDir}`, { fsp, path }) : {};
   const tmpNameP = prefix =>
     new Promise((resolve, reject) =>
       tmpName({ prefix }, (err, x) => (err ? reject(err) : resolve(x))),
