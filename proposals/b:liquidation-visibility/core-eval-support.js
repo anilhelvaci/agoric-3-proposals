@@ -252,3 +252,12 @@ export const copyAll = (config, { fsp }) => {
  * @param {string} filePath
  */
 export const extractNameFromPath = filePath => filePath.split('/').at(-1)
+
+/**
+ * - get the next start time
+ * - send an offer to manualTimer
+ */
+export const runAuction = async (t) => {
+  const schedule = await getContractInfo('fakeAuctioneer.schedule', { agoric: t.context.agoric });
+  t.log(schedule);
+}
