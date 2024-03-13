@@ -2,6 +2,8 @@
 
 set -e
 
-# source /usr/src/upgrade-test-scripts/env_setup.sh
+source /usr/src/upgrade-test-scripts/env_setup.sh
 
-echo "no post-build tests for KREAd"
+yarn test test-liquidation-visibility.js
+yarn test post.liquidation.js
+yarn test post.test.js
