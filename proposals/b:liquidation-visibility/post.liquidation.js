@@ -173,7 +173,7 @@ test.serial('prepare vault factory', async t => {
     '    factoryPowers,\n' +
     '    zcf,\n' +
     '    timerService: timer,\n' +
-    '  }');
+    '  }').replace('fn(vm)', 'Promise.resolve(vm).then(vm => fn(vm)).catch(e => trace(\'ERROR: allManagersDo\', e))');
   await vdVersion2.writeText(vdMutated);
 
   // Override vaultFactory zcf.getTerms();

@@ -1,6 +1,7 @@
 // @ts-check
 // TODO: factor out ambient authority from these
 // or at least allow caller to supply authority.
+import '@endo/init';
 import {
   agoric,
   makeFileRd,
@@ -10,12 +11,28 @@ import {
   waitForBlock,
   agops, agd, getContractInfo,
 } from '@agoric/synthetic-chain';
+import {
+  boardValToSlot,
+  slotToBoardRemote
+} from "@agoric/vats/tools/board-utils.js";
+import { makeMarshal } from "@endo/marshal";
 import processAmbient from "process";
 import cpAmbient from "child_process";
 import dbOpenAmbient from "better-sqlite3";
 import fspAmbient from "fs/promises";
 import pathAmbient from "path";
 import { tmpName as tmpNameAmbient } from "tmp";
+
+const AdvanceTimeOfferSpec = ({ id, timestamp }) => ({
+  id,
+  invitationSpec: {
+    source: "agoricContract",
+    instancePath: ['manualTimerInstance'],
+    callPipe: [["makeAdvanceTimeInvitation"]],
+  },
+  proposal: {},
+  offerArgs: { timestamp },
+});
 
 export const makeTestContext = async ({ io = {}, testConfig, srcDir }) => {
   const {
@@ -66,22 +83,6 @@ export const getFileSize = async (src, fileName) => {
   const file = src.join(fileName);
   const { size } = await file.stat();
   return size;
-};
-
-/** @param {import('@agoric/synthetic-chain').FileRW} src
- * @param config
- */
-export const readBundleSizes = async (src, config) => {
-  const info = config.buildInfo;
-  const bundleSizes = await Promise.all(
-    info
-      .map(({ bundles }) =>
-        bundles.map(bundleName => getFileSize(src, bundleName)),
-      )
-      .flat(),
-  );
-  const totalSize = sum(bundleSizes);
-  return { bundleSizes, totalSize };
 };
 
 export const poll = async (check, maxTries) => {
@@ -253,11 +254,70 @@ export const copyAll = (config, { fsp }) => {
  */
 export const extractNameFromPath = filePath => filePath.split('/').at(-1)
 
+export const makeBoardMarshaller = () => makeMarshal(boardValToSlot, slotToBoardRemote, { serializeBodyFormat: 'smallcaps'});
+
+
+/**
+ * Like getContractInfo from @agoric/synthetic-chain but also returns
+ * the marshaller itself as well.
+ *
+ * @param io
+ * @return {{data: any, marshaller: import('@endo/marshal').Marshal}}
+ *
+ */
+export const makeStorageInfoGetter = io => {
+  const {
+    agoric
+  } = io;
+
+  const marshaller = makeBoardMarshaller();
+
+  const getStorageInfo = async path => {
+    const stdout = await agoric.follow('-lF', `:${path}`, '-o', 'text');
+    const tx = JSON.parse(stdout);
+    return marshaller.fromCapData(tx);
+  };
+
+  return { getStorageInfo, marshaller };
+}
+
 /**
  * - get the next start time
  * - send an offer to manualTimer
  */
-export const runAuction = async (t) => {
-  const schedule = await getContractInfo('fakeAuctioneer.schedule', { agoric: t.context.agoric });
+export const runAuction = async (t, from) => {
+  const { mkTempRW, agoric } = t.context;
+  const id = `manual-timer-${Date.now()}`;
+  const tmpRW = await mkTempRW(id);
+
+  const { getStorageInfo, marshaller } = makeStorageInfoGetter({ agoric })
+
+  const schedule = await getStorageInfo('published.fakeAuctioneer.schedule');
+
+  const { nextStartTime } = schedule;
   t.log(schedule);
+
+  // Now start the auction
+  await sendTimerOffer(from, nextStartTime.absValue, marshaller, tmpRW, id);
 }
+
+export const sendTimerOffer = async (from, timeTo, marshaller, fileSrc, id) => {
+  const offerSpec = AdvanceTimeOfferSpec({ id: `${id}-${timeTo}`, timestamp: timeTo });
+  const spendAction = {
+    method: "executeOffer",
+    offer: offerSpec,
+  };
+
+  const offer = JSON.stringify(marshaller.toCapData(harden(spendAction)));
+  await fileSrc.writeText(offer);
+
+  return agoric.wallet(
+    'send',
+    '--from',
+    from,
+    '--keyring-backend=test',
+    '--offer',
+    fileSrc.toString()
+  );
+}
+

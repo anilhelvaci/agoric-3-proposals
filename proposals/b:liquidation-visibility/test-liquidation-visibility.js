@@ -10,20 +10,11 @@
 import anyTest from 'ava';
 import {
   makeTestContext,
-  readBundleSizes,
 } from './core-eval-support.js';
 import {
-  voteLatestProposalAndWait,
-  waitForBlock,
-  loadedBundleIds,
-  testIncludes,
-  txAbbr,
-  bundleDetail,
-  ensureISTForInstall,
-  flags,
-  wellKnownIdentities,
-  getContractInfo,
   mintIST,
+  readBundles,
+  passCoreEvalProposal,
 } from '@agoric/synthetic-chain';
 
 /** @typedef {Awaited<ReturnType<typeof makeTestContext>>} TestContext */
@@ -63,81 +54,6 @@ const staticConfig = {
 
 test.before(async t => (t.context = await makeTestContext({ testConfig: staticConfig, srcDir: 'assets' })));
 
-test.serial(`pre-flight: not in agoricNames.instance`, async t => {
-  const { config, agoric } = t.context;
-  const { instance: target } = config;
-  console.log({ config, agoric });
-  const { instance } = await wellKnownIdentities({ agoric });
-  testIncludes(t, target, Object.keys(instance), 'instance keys', false);
-});
-
-test.serial('bundles not yet installed', async t => {
-  const { swingstore, src } = t.context;
-  const loaded = loadedBundleIds(swingstore);
-  const info = staticConfig.buildInfo;
-
-  for await (const { bundles, evals } of info) {
-    t.log(evals[0].script, evals.length, 'eval', bundles.length, 'bundles');
-
-    for await (const bundle of bundles) {
-      const detail = bundleDetail(bundle);
-      console.log({ detail });
-      const { id } = detail;
-      testIncludes(t, id, loaded, 'loaded bundles', false);
-    }
-  }
-});
-
-test.serial('ensure enough IST to install bundles', async t => {
-  const { agd, config, src } = t.context;
-  const { totalSize, bundleSizes } = await readBundleSizes(src, staticConfig);
-  console.log({ totalSize, bundleSizes });
-  await ensureISTForInstall(agd, config, totalSize, {
-    log: t.log,
-  });
-  t.pass();
-});
-
-test.serial('ensure bundles installed', async t => {
-  const { agd, swingstore, agoric, config, io, src } = t.context;
-  const { chainId } = config;
-  const loaded = loadedBundleIds(swingstore);
-  const from = agd.lookup(config.installer);
-
-  let todo = 0;
-  let done = 0;
-  for await (const { bundles } of staticConfig.buildInfo) {
-    todo += bundles.length;
-    for await (const bundle of bundles) {
-      const { id, endoZipBase64Sha512, fileName } = bundleDetail(
-        bundle
-      );
-      if (loaded.includes(id)) {
-        t.log('bundle already installed', id);
-        done += 1;
-        continue;
-      }
-
-      const result = await agd.tx(
-        ['swingset', 'install-bundle', `@./assets/${fileName}`, '--gas', '120000000'],
-        { from, chainId, yes: true },
-      );
-      t.log(txAbbr(result));
-      t.is(result.code, 0);
-
-      const info = await getContractInfo('bundles', { agoric, prefix: '' });
-      t.log(info);
-      done += 1;
-      t.deepEqual(info, {
-        endoZipBase64Sha512,
-        error: null,
-        installed: true,
-      });
-    }
-  }
-  t.is(todo, done);
-});
-
 test.serial('fund user1 before the upgrade', async t => {
   const { agd } = t.context;
   const addr = agd.lookup(staticConfig.installer);
@@ -149,54 +65,11 @@ test.serial('fund user1 before the upgrade', async t => {
   t.pass();
 });
 
-test.serial('core eval proposal passes', async t => {
-  const { agd, swingstore, config, mkTempRW, src } = t.context;
-  const from = agd.lookup(config.proposer);
-  const { chainId, deposit, instance } = config;
-  const info = { title: instance, description: `start ${instance}` };
-  t.log('submit proposal', instance);
+test.serial('test', async t => {
 
-  // double-check that bundles are loaded
-  const loaded = loadedBundleIds(swingstore);
-  const { buildInfo } = staticConfig;
-  for (const { bundles } of buildInfo) {
-    for (const bundle of bundles) {
-      const { id } = bundleDetail(bundle);
-      testIncludes(t, id, loaded, 'loaded bundles');
-    }
-  }
+  const dir = '/usr/src/a3p/proposals/b:liquidation-visibility/assets';
+  const bundleInfos = await readBundles('/usr/src/a3p/proposals/b:liquidation-visibility/assets');
 
-  const evalNames = buildInfo
-    .map(({ evals }) => evals)
-    .flat()
-    .map(e => [e.permit, e.script])
-    .flat();
-  const evalPaths = await Promise.all(evalNames.map(evalName => {
-    return src.join(evalName).toString();
-  }));
-  t.log(evalPaths);
-  console.log('await tx', evalPaths);
-  const result = await agd.tx(
-    [
-      'gov',
-      'submit-proposal',
-      'swingset-core-eval',
-      ...evalPaths,
-      ...flags({ ...info, deposit }),
-      ...flags({ gas: 'auto', 'gas-adjustment': '1.2' }),
-    ],
-    { from, chainId, yes: true },
-  );
-  console.log('RESULT', { result });
-  t.log(txAbbr(result));
-  t.is(result.code, 0);
-
-  console.log('await voteLatestProposalAndWait', evalPaths);
-  const detail = await voteLatestProposalAndWait();
-  t.log(detail.proposal_id, detail.voting_end_time, detail.status);
-
-  // XXX https://github.com/Agoric/agoric-3-proposals/issues/91
-  await waitForBlock(15);
-
-  t.is(detail.status, 'PROPOSAL_STATUS_PASSED');
-})
+  await passCoreEvalProposal(bundleInfos, { title: `Core eval of ${dir}`, ...staticConfig });
+  t.pass();
+});
