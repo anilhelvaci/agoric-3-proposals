@@ -4,7 +4,7 @@ import {
   agoric,
   getContractInfo,
   readBundles,
-  passCoreEvalProposal,
+  passCoreEvalProposal, makeFileRW,
 } from "@agoric/synthetic-chain";
 import fs from 'fs';
 import {
@@ -13,6 +13,8 @@ import {
   poll,
   pushPrice,
 } from "./core-eval-support.js";
+import * as path from "path";
+import * as fsp from "fs/promises";
 
 /**
  * 1. Add new collateral manager
@@ -70,7 +72,8 @@ const staticConfig = {
 };
 
 test.before(async t => (t.context = await makeTestContext({
-  testConfig: staticConfig
+  testConfig: staticConfig,
+  srcDir: 'testAssets'
 })));
 
 /**
@@ -86,6 +89,23 @@ test.serial.skip('build-proposal', async t => {
   await executeCommand('agoric run', [dstPath], { cwd: './testAssets/starsCollateral/'});
 
   t.pass();
+});
+
+test.serial('make sure oracle addresses include gov1 and gov2', async t => {
+  const { agd } = t.context;
+  const starsOraclesRW = makeFileRW('testAssets/addStarsAsset/add-STARS-oracles.js', { fsp, path });
+  const oraclesPropContent = await starsOraclesRW.readOnly().readText();
+
+
+  const gov1Addr = agd.lookup('gov1');
+  const gov2Addr = agd.lookup('gov2');
+
+  const regex = /oracleAddresses: \[(.|\n)*\],/g
+  const replacement = `oracleAddresses: ["${gov1Addr}", "${gov2Addr}"],`;
+  const oraclesPropMutated = oraclesPropContent.replace(regex, replacement);
+  await starsOraclesRW.writeText(oraclesPropMutated);
+
+  t.pass()
 });
 
 test.serial('add STARS asset', async t => {
@@ -134,13 +154,9 @@ test.serial('push initial prices', async t => {
   t.is(roundId, 1n);
 });
 
+test.todo('fund users with STARS');
+
 test.todo('open vaults');
 test.todo('trigger liquidation');
 test.todo('run liquidation');
 test.todo('check visibility'); // How long the auction is going to take?
-test.skip('vstorage check', async t => {
-  const { agoric } = t.context;
-  const data = await getContractInfo('auction.governance', { agoric });
-  t.log(data.current.ClockStep);
-  t.pass();
-});
