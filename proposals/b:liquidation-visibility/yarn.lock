@@ -45,6 +45,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@agoric/deploy-script-support@npm:latest":
+  version: 0.10.4-u14.1
+  resolution: "@agoric/deploy-script-support@npm:0.10.4-u14.1"
+  dependencies:
+    "@agoric/assert": "npm:^0.6.1-u11wf.0"
+    "@agoric/ertp": "npm:^0.16.3-u14.0"
+    "@agoric/import-manager": "npm:^0.3.12-u14.0"
+    "@agoric/internal": "npm:^0.4.0-u14.0"
+    "@agoric/notifier": "npm:^0.6.3-u14.0"
+    "@agoric/store": "npm:^0.9.3-u14.0"
+    "@agoric/zoe": "npm:^0.26.3-u14.0"
+    "@endo/base64": "npm:0.2.31"
+    "@endo/bundle-source": "npm:2.5.2-upstream-rollup"
+    "@endo/far": "npm:0.2.18"
+    "@endo/marshal": "npm:0.8.5"
+    "@endo/nat": "npm:4.1.27"
+    "@endo/promise-kit": "npm:0.2.56"
+    "@endo/zip": "npm:0.2.31"
+  checksum: 18ab11d796e6af5aafdd9d671620ea7ccb2e4bddf27c68bf8bebb70a727480b61d80a5604f7ea6575aeb7329ac2a2f49c58956ca25d072d7bc259bc756e8f27a
+  languageName: node
+  linkType: hard
+
 "@agoric/ertp@npm:0.16.3-upgrade-14-dev-c8f9e7b.0+c8f9e7b, @agoric/ertp@npm:^0.16.3-u14.0":
   version: 0.16.3-upgrade-14-dev-c8f9e7b.0
   resolution: "@agoric/ertp@npm:0.16.3-upgrade-14-dev-c8f9e7b.0"
@@ -87,7 +109,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@agoric/import-manager@npm:0.3.12-upgrade-14-dev-c8f9e7b.0+c8f9e7b":
+"@agoric/import-manager@npm:0.3.12-upgrade-14-dev-c8f9e7b.0+c8f9e7b, @agoric/import-manager@npm:^0.3.12-u14.0":
   version: 0.3.12-upgrade-14-dev-c8f9e7b.0
   resolution: "@agoric/import-manager@npm:0.3.12-upgrade-14-dev-c8f9e7b.0"
   checksum: 02835cf0b72ae92226cd6a7b023f4ecb15ecda89cc5c64b42862b1f6e1e44a417e9c3458e594926f67aed0cca70b3c3adcfa543097b106dded9c01cae0a53cfd
@@ -737,6 +759,17 @@ __metadata:
     "@endo/eventual-send": "npm:^0.17.6"
     "@endo/pass-style": "npm:^0.1.7"
   checksum: bd30a168b47a26014cab296336a64aa2721975c386f7f87b6776dd33cf77f3e85ddb822e8422fbc2befb6920d72301e3b9b206fe71d970dce1870b708b09805d
+  languageName: node
+  linkType: hard
+
+"@endo/far@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@endo/far@npm:1.0.4"
+  dependencies:
+    "@endo/errors": "npm:^1.1.0"
+    "@endo/eventual-send": "npm:^1.1.2"
+    "@endo/pass-style": "npm:^1.2.0"
+  checksum: 61a0fbefe7b05cc5d67c68b0cb0ed5ef5791aadbb06cc0523493fa412fcc40e66df8977a46ff330b67218c5e1cde231ab72b6159c03330e16e6017444ea2db17
   languageName: node
   linkType: hard
 
@@ -2618,6 +2651,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"liquidation-visibility@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "liquidation-visibility@workspace:."
+  dependencies:
+    "@agoric/deploy-script-support": "npm:latest"
+    "@agoric/ertp": "npm:^0.16.3-u14.0"
+    "@agoric/inter-protocol": "npm:^0.16.2-u14.1"
+    "@agoric/synthetic-chain": "npm:latest"
+    "@agoric/vats": "npm:latest"
+    "@endo/far": "npm:^1.0.4"
+    "@endo/init": "npm:^1.0.4"
+    "@endo/marshal": "npm:^1.3.0"
+    "@endo/zip": "npm:^0.2.35"
+    ava: "npm:^5.3.1"
+    better-sqlite3: "npm:^9.4.0"
+    execa: "npm:^7.2.0"
+    tmp: "npm:^0.2.1"
+  languageName: unknown
+  linkType: soft
+
 "load-json-file@npm:^7.0.0":
   version: 7.0.1
   resolution: "load-json-file@npm:7.0.1"
@@ -3362,22 +3415,6 @@ __metadata:
   checksum: 421418687f5dcd7324f4387f203c6bfc7118b7ace789e30f5da022471c43e037a76f5fd93837052754eeeae798a4fb266ac05ccee1e594406d912a59af98dde9
   languageName: node
   linkType: hard
-
-"root-workspace-0b6124@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "root-workspace-0b6124@workspace:."
-  dependencies:
-    "@agoric/synthetic-chain": "npm:latest"
-    "@agoric/vats": "npm:latest"
-    "@endo/init": "npm:^1.0.4"
-    "@endo/marshal": "npm:^1.3.0"
-    "@endo/zip": "npm:^0.2.35"
-    ava: "npm:^5.3.1"
-    better-sqlite3: "npm:^9.4.0"
-    execa: "npm:^7.2.0"
-    tmp: "npm:^0.2.1"
-  languageName: unknown
-  linkType: soft
 
 "run-parallel@npm:^1.1.9":
   version: 1.2.0

@@ -108,8 +108,35 @@ test.serial('make sure oracle addresses include gov1 and gov2', async t => {
   t.pass()
 });
 
+test.serial('make sure user1 will be funded with STARS', async t => {
+  const { agd } = t.context;
+  const fundStarsRW = makeFileRW('testAssets/fundStars/fund-stars-prop.js', { fsp, path });
+  const fundStarsContent = await fundStarsRW.readOnly().readText();
+
+
+  const user1Addr = agd.lookup('user1');
+
+  const regex = /fundAccounts: \[(.|\n)*\],/g
+  const replacement = `fundAccounts: ["${user1Addr}"],`;
+  const fundAccountsMutated = fundStarsContent.replace(regex, replacement);
+  await fundStarsRW.writeText(fundAccountsMutated);
+
+  t.pass()
+});
+
 test.serial('add STARS asset', async t => {
   const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/addStarsAsset';
+  const bundleInfos = await readBundles(propDir);
+  await passCoreEvalProposal(
+    bundleInfos,
+    { title: `Core eval of ${propDir}`, installer: 'user1'}
+  );
+  t.log(bundleInfos);
+  t.pass();
+});
+
+test.serial('fund user1 with STARS', async t => {
+  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/fundStars';
   const bundleInfos = await readBundles(propDir);
   await passCoreEvalProposal(
     bundleInfos,
