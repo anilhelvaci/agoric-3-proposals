@@ -179,6 +179,11 @@ export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2R
     },
     produce: {
       auctioneerKit,
+    },
+    instance: {
+      produce: {
+        auctioneer
+      }
     }
   } = powers;
 
@@ -215,9 +220,13 @@ export const upgradeVaultFactory = async (powers, { options: { vaultFactoryInc2R
 
   // We do this after upgrading the vaultFactory to make sure it's upgraded
   // with the correct auctioneer version
-  trace('Override original auctioneer with the fake one...');
+  trace('Override original auctioneerKit with the fake one...');
   auctioneerKit.reset();
   auctioneerKit.resolve(fakeAuctioneerKit);
+
+  trace('Override original auctioneer instance with the fake one...');
+  auctioneer.reset();
+  auctioneer.resolve(fakeAuctioneerKit.instance);
 
   trace('Done.');
 }
@@ -277,6 +286,11 @@ export const getManifestForInitManualTimerFaucet = async (_powers, { manualTimer
         },
         produce: {
           auctioneerKit: 'to replace the original auctioneer',
+        },
+        instance: {
+          produce: {
+            auctioneer: "to use agops"
+          }
         }
       }
     },
