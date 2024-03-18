@@ -3,10 +3,18 @@ import { ATOM_DENOM, CHAINID, VALIDATORADDR } from './constants.js';
 import { executeOffer } from './commonUpgradeHelpers.js';
 
 // TODO return the id of the new vault so subsquent commands can use it
-export const openVault = (address, mint, collateral) => {
+export const openVault = (address, mint, collateral, collateralBrand = "ATOM") => {
   return executeOffer(
     address,
-    agops.vaults('open', '--wantMinted', mint, '--giveCollateral', collateral),
+    agops.vaults(
+      'open',
+      '--wantMinted',
+      mint,
+      '--giveCollateral',
+      collateral,
+      '--collateralBrand',
+      collateralBrand
+    ),
   );
 };
 

@@ -5,7 +5,9 @@ import {
   getContractInfo,
   readBundles,
   passCoreEvalProposal, makeFileRW,
+  agd,
 } from "@agoric/synthetic-chain";
+import { openVault } from '../../packages/synthetic-chain/src/lib/econHelpers.js';
 import fs from 'fs';
 import {
   acceptsOracleInvitations,
@@ -181,9 +183,72 @@ test.serial('push initial prices', async t => {
   t.is(roundId, 1n);
 });
 
-test.todo('fund users with STARS');
+test.serial('ensure user1 is provisioned with STARS', async t => {
+  const { config } = t.context;
 
-test.todo('open vaults');
+  const address = await agd.keys(
+    'show',
+    config.installer,
+    '-a',
+    '--keyring-backend=test',
+  );
+  const balances = (await agd.query('bank', 'balances', `${address}`)).balances;
+  t.log('Log: from', balances);
+
+  for (const balance of balances) {
+    if (
+      balance.denom ===
+      'ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4'
+    ) {
+      t.is(balance.amount, '1000000000000000000000');
+    }
+  }
+});
+
+test.serial('open vaults', async t => {
+  const { agops, swingstore, config, src } = t.context;
+
+  const address = await agd.keys(
+    'show',
+    config.installer,
+    '-a',
+    '--keyring-backend=test',
+  );
+
+  const managers = await agd.query(
+    'vstorage',
+    'children',
+    'published.vaultFactory.managers',
+  );
+  console.log('Log: ', managers);
+
+  const metrics = await agd.query(
+    'vstorage',
+    'data',
+    'published.vaultFactory.managers.manager1.metrics',
+  );
+  console.log('Log: ', metrics);
+
+  const vaults = await agd.query(
+    'vstorage',
+    'children',
+    'published.vaultFactory.managers.manager2.vaults',
+  );
+  console.log('Log: ', vaults);
+
+  let userVaults = await agops.vaults('list', '--from', address);
+  console.log('Log: ', userVaults);
+
+  const STARSGiven = 2000;
+  const ISTWanted = 400;
+  await openVault(address, ISTWanted, STARSGiven, "STARS");
+
+  userVaults = await agops.vaults('list', '--from', address);
+  console.log('Log: ', userVaults);
+
+  t.pass();
+});
+
 test.todo('trigger liquidation');
 test.todo('run liquidation');
 test.todo('check visibility'); // How long the auction is going to take?
