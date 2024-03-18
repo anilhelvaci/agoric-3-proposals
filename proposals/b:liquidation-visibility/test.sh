@@ -4,6 +4,5 @@ set -e
 
 source /usr/src/upgrade-test-scripts/env_setup.sh
 
-yarn test test-liquidation-visibility.js
-yarn test post.liquidation.js
-yarn test post.test.js
+yarn test:eval -m "fund user1 before the upgrade"
+yarn test:post-liq
