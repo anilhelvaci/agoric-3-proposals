@@ -9,7 +9,10 @@ import {
   makeAgd,
   dbTool,
   waitForBlock,
-  agops, agd, getContractInfo,
+  agops,
+  agd,
+  getContractInfo,
+  executeOffer,
 } from '@agoric/synthetic-chain';
 import {
   boardValToSlot,
@@ -321,3 +324,19 @@ export const sendTimerOffer = async (from, timeTo, marshaller, fileSrc, id) => {
   );
 }
 
+// TODO Feature request: Open an issue asking for a parameterized collateral
+//  brand
+export const openVault = (address, mint, collateral, collateralBrand = "ATOM") => {
+  return executeOffer(
+    address,
+    agops.vaults(
+      'open',
+      '--wantMinted',
+      mint,
+      '--giveCollateral',
+      collateral,
+      '--collateralBrand',
+      collateralBrand
+    ),
+  );
+};
