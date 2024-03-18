@@ -18,13 +18,14 @@ import {
   boardValToSlot,
   slotToBoardRemote
 } from "@agoric/vats/tools/board-utils.js";
-import { makeMarshal } from "@endo/marshal";
+import { Far, makeMarshal } from "@endo/marshal";
 import processAmbient from "process";
 import cpAmbient from "child_process";
 import dbOpenAmbient from "better-sqlite3";
 import fspAmbient from "fs/promises";
 import pathAmbient from "path";
 import { tmpName as tmpNameAmbient } from "tmp";
+import { TimeMath } from "@agoric/time";
 
 const AdvanceTimeOfferSpec = ({ id, timestamp }) => ({
   id,
@@ -284,6 +285,51 @@ export const makeStorageInfoGetter = io => {
   return { getStorageInfo, marshaller };
 }
 
+export const makeAuctionTimerDriver = async (t, from) => {
+  const { mkTempRW, agoric } = t.context;
+  const id = `manual-timer-${Date.now()}`;
+  const tmpRW = await mkTempRW(id);
+
+  const { getStorageInfo, marshaller } = makeStorageInfoGetter({ agoric });
+
+
+  const runAuction = async () => {
+    const schedule = await getStorageInfo('published.fakeAuctioneer.schedule');
+
+    const { nextStartTime } = schedule;
+    t.log(schedule);
+
+    // Now start the auction
+    await sendTimerOffer(from, nextStartTime.absValue, marshaller, tmpRW, id);
+  };
+
+  /**
+   * priceLockWakeTime = nominalStart - priceLockPeriod
+   */
+  const lockPrices = async () => {
+    const [schedule, governance] = await Promise.all([
+      getStorageInfo('published.fakeAuctioneer.schedule'),
+      getStorageInfo('published.fakeAuctioneer.governance'),
+    ]);
+
+    const { nextStartTime: { absValue: nextStartTimeVal } } = schedule;
+    const {
+      AuctionStartDelay: { value: { relValue: auctionStartDelay} },
+      PriceLockPeriod: { value: { relValue: priceLockPeriod } }
+    } = governance.current;
+
+    const nominalStartTime = nextStartTimeVal - auctionStartDelay;
+    const priceLockTime = nominalStartTime - priceLockPeriod;
+
+    await sendTimerOffer(from, priceLockTime, marshaller, tmpRW, id);
+  };
+
+  return {
+    runAuction,
+    lockPrices
+  };
+}
+
 /**
  * - get the next start time
  * - send an offer to manualTimer
@@ -302,6 +348,10 @@ export const runAuction = async (t, from) => {
 
   // Now start the auction
   await sendTimerOffer(from, nextStartTime.absValue, marshaller, tmpRW, id);
+}
+
+export const lockPrice = async (t, from) => {
+
 }
 
 export const sendTimerOffer = async (from, timeTo, marshaller, fileSrc, id) => {
@@ -340,3 +390,9 @@ export const openVault = (address, mint, collateral, collateralBrand = "ATOM") =
     ),
   );
 };
+
+export const bid = () => {
+  /**
+   * agops inter bid by-price --from user1 --give 90IST --price 9.2 --maxBuy 10STARS --keyring-backend=test
+   */
+}

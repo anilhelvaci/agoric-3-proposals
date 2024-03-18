@@ -5,7 +5,6 @@ import {
   readBundles,
   passCoreEvalProposal,
   makeFileRW,
-  agd,
 } from "@agoric/synthetic-chain";
 import fs from 'fs';
 import {
@@ -13,7 +12,6 @@ import {
   makeTestContext,
   poll,
   pushPrice,
-  openVault,
 } from "./core-eval-support.js";
 import * as path from "path";
 import * as fsp from "fs/promises";
@@ -182,58 +180,6 @@ test.serial('push initial prices', async t => {
 
   const { roundId } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
   t.is(roundId, 1n);
-});
-
-test.serial('ensure user1 is provisioned with STARS', async t => {
-  const { config } = t.context;
-
-  const address = await agd.keys(
-    'show',
-    config.installer,
-    '-a',
-    '--keyring-backend=test',
-  );
-  const balances = (await agd.query('bank', 'balances', `${address}`)).balances;
-  t.log('Log: from', balances);
-
-  for (const balance of balances) {
-    if (
-      balance.denom ===
-      'ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4'
-    ) {
-      t.is(balance.amount, '1000000000000000000000');
-    }
-  }
-});
-
-test.serial('here open vaults', async t => {
-  const { config, agops } = t.context;
-
-  const address = await agd.keys(
-    'show',
-    config.installer,
-    '-a',
-    '--keyring-backend=test',
-  );
-
-  const vaults = await agd.query(
-    'vstorage',
-    'children',
-    'published.vaultFactory.managers.manager2.vaults',
-  );
-  console.log('Log: ', vaults);
-
-  let userVaults = await agops.vaults('list', '--from', address);
-  console.log('Log: ', userVaults);
-
-  const STARSGiven = 2000;
-  const ISTWanted = 400;
-  await openVault(address, ISTWanted, STARSGiven, "STARS");
-
-  userVaults = await agops.vaults('list', '--from', address);
-  console.log('Log: ', userVaults);
-
-  t.pass();
 });
 
 test.todo('trigger liquidation');

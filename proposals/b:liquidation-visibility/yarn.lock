@@ -2659,6 +2659,7 @@ __metadata:
     "@agoric/ertp": "npm:^0.16.3-u14.0"
     "@agoric/inter-protocol": "npm:^0.16.2-u14.1"
     "@agoric/synthetic-chain": "npm:latest"
+    "@agoric/time": "npm:^0.3.3-u14.0"
     "@agoric/vats": "npm:latest"
     "@endo/far": "npm:^1.0.4"
     "@endo/init": "npm:^1.0.4"
