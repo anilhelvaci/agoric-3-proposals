@@ -13,6 +13,8 @@ import {
   agd,
   getContractInfo,
   executeOffer,
+  agopsLocation,
+  executeCommand,
 } from '@agoric/synthetic-chain';
 import {
   boardValToSlot,
@@ -293,7 +295,7 @@ export const makeAuctionTimerDriver = async (t, from) => {
   const { getStorageInfo, marshaller } = makeStorageInfoGetter({ agoric });
 
 
-  const runAuction = async () => {
+  const startAuction = async () => {
     const schedule = await getStorageInfo('published.fakeAuctioneer.schedule');
 
     const { nextStartTime } = schedule;
@@ -301,6 +303,16 @@ export const makeAuctionTimerDriver = async (t, from) => {
 
     // Now start the auction
     await sendTimerOffer(from, nextStartTime.absValue, marshaller, tmpRW, id);
+  };
+
+  const advanceAuctionStep = async () => {
+    const schedule = await getStorageInfo('published.fakeAuctioneer.schedule');
+
+    const { nextDescendingStepTime } = schedule;
+    t.log(schedule);
+
+    // Now start the auction
+    await sendTimerOffer(from, nextDescendingStepTime.absValue, marshaller, tmpRW, id);
   };
 
   /**
@@ -325,33 +337,10 @@ export const makeAuctionTimerDriver = async (t, from) => {
   };
 
   return {
-    runAuction,
+    advanceAuctionStep,
+    startAuction,
     lockPrices
   };
-}
-
-/**
- * - get the next start time
- * - send an offer to manualTimer
- */
-export const runAuction = async (t, from) => {
-  const { mkTempRW, agoric } = t.context;
-  const id = `manual-timer-${Date.now()}`;
-  const tmpRW = await mkTempRW(id);
-
-  const { getStorageInfo, marshaller } = makeStorageInfoGetter({ agoric })
-
-  const schedule = await getStorageInfo('published.fakeAuctioneer.schedule');
-
-  const { nextStartTime } = schedule;
-  t.log(schedule);
-
-  // Now start the auction
-  await sendTimerOffer(from, nextStartTime.absValue, marshaller, tmpRW, id);
-}
-
-export const lockPrice = async (t, from) => {
-
 }
 
 export const sendTimerOffer = async (from, timeTo, marshaller, fileSrc, id) => {
@@ -391,8 +380,54 @@ export const openVault = (address, mint, collateral, collateralBrand = "ATOM") =
   );
 };
 
-export const bid = () => {
+const agopsInter = async (...params) => {
+  const newParams = ['inter', ...params, '--keyring-backend=test'];
+  return executeCommand(agopsLocation, newParams);
+};
+
+export const bidByPrice = (address, spend, colKeyword, price) => {
   /**
-   * agops inter bid by-price --from user1 --give 90IST --price 9.2 --maxBuy 10STARS --keyring-backend=test
+   * agops inter bid by-price --from user1 --give 90IST --price 9.2 --maxBuy
+   * 10STARS --keyring-backend=test --generate-only
    */
+
+  return executeOffer(
+    address,
+    agopsInter(
+      'bid',
+      'by-price',
+      '--give',
+      `${spend}`,
+      `--maxBuy`,
+      `10000${colKeyword}`, // 10k ATOM is the default, use the same forSTARS
+      `--price`,
+      price,
+      `--from`,
+      address,
+      '--generate-only'
+    ),
+  );
 }
+
+export const bidByDiscount = (address, spend, colKeyword, discount) => {
+  /**
+   * agops inter bid by-discount --from user1 --give 150IST --maxBuy 10000STARS --discount 15 --keyring-backend=test --generate-only
+   */
+
+  return executeOffer(
+    address,
+    agopsInter(
+      'bid',
+      'by-discount',
+      '--give',
+      `${spend}`,
+      `--maxBuy`,
+      `10000${colKeyword}`, // 10k ATOM is the default, use the same forSTARS
+      `--discount`,
+      discount,
+      `--from`,
+      address,
+      '--generate-only'
+    ),
+  );
+};
