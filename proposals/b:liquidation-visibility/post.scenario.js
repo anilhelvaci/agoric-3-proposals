@@ -1,8 +1,9 @@
 import test from "ava";
 import {
+  bidByDiscount,
+  bidByPrice,
   makeAuctionTimerDriver,
   makeTestContext, openVault, pushPrice,
-  runAuction
 } from "./core-eval-support.js";
 import { getContractInfo } from "@agoric/synthetic-chain";
 import { Liquiation} from "./spec.test.js";
@@ -40,21 +41,46 @@ test.serial('open vaults', async t => {
   t.pass();
 });
 
-test.serial('trigger liquidation', async t => {
-  const { agoric, config } = t.context;
-  await pushPrice(t, Liquiation.setup.price.trigger, config.oracles.reverse());
+test.serial('place bid', async t => {
+  const { agd } = t.context;
+  const user1Addr = agd.lookup('user1');
+  const colKeyword = 'STARS';
 
-  const { roundId } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
-  t.is(roundId, 2n);
-});
-
-test('run auction', async t => {
-  await runAuction(t, 'user1');
+  for (const bid of Liquiation.setup.bids) {
+    if (bid.price) {
+      await bidByPrice(user1Addr, bid.give, colKeyword, bid.price);
+    } else if(bid.discount) {
+      await bidByDiscount(user1Addr, bid.give, colKeyword, bid.discount);
+    }
+  }
   t.pass();
 });
 
-test.only('lockPrice', async t => {
-  const driver = await makeAuctionTimerDriver(t, 'user1');
-  await driver.lockPrices();
+test.serial('trigger liquidation', async t => {
+  const { agoric, config, agd } = t.context;
+  const { roundId: roundIdBefore, startedBy } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
+  const gov1Addr = agd.lookup('gov1');
+
+  const oraclesConfig = startedBy === gov1Addr ? config.oracles.reverse() : config.oracles;
+
+  await pushPrice(t, Liquiation.setup.price.trigger, oraclesConfig);
+
+  const { roundId: roundIdAfter } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
+
+  t.is(roundIdAfter, roundIdBefore + 1n);
+});
+
+test.serial('start auction', async t => {
+  const { startAuction } = await makeAuctionTimerDriver(t, 'user1');
+  await startAuction();
+  t.pass();
+});
+
+test.serial('make sure bid are settled', async t => {
+  const { advanceAuctionStep } = await makeAuctionTimerDriver(t, 'user1');
+  // We expect all bids to settle after 5 clock steps
+  for (let i = 0; i < 5; i++) {
+    await advanceAuctionStep();
+  }
   t.pass();
 });

@@ -21,7 +21,7 @@ export const Liquiation = {
     bids: [
       {
         give: '80IST',
-        discount: 0.1,
+        discount: 10,
       },
       {
         give: '90IST',
@@ -29,7 +29,7 @@ export const Liquiation = {
       },
       {
         give: '150IST',
-        discount: 0.15,
+        discount: 15,
       },
     ],
     price: {
