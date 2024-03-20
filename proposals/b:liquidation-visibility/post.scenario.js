@@ -1,12 +1,13 @@
 import test from "ava";
 import {
+  assertVisibility,
   bidByDiscount,
   bidByPrice,
   makeAuctionTimerDriver,
   makeTestContext, openVault, pushPrice,
 } from "./core-eval-support.js";
 import { getContractInfo } from "@agoric/synthetic-chain";
-import { Liquiation} from "./spec.test.js";
+import { Liquidation} from "./spec.test.js";
 
 test.before(async t => {
   t.context = await makeTestContext(
@@ -31,7 +32,7 @@ test.serial('open vaults', async t => {
   let userVaults = await agops.vaults('list', '--from', address);
   console.log('Log: ', userVaults);
 
-  for (const { collateral, ist } of Liquiation.setup.vaults) {
+  for (const { collateral, ist } of Liquidation.setup.vaults) {
     await openVault(address, ist, collateral, "STARS");
   }
 
@@ -46,7 +47,7 @@ test.serial('place bid', async t => {
   const user1Addr = agd.lookup('user1');
   const colKeyword = 'STARS';
 
-  for (const bid of Liquiation.setup.bids) {
+  for (const bid of Liquidation.setup.bids) {
     if (bid.price) {
       await bidByPrice(user1Addr, bid.give, colKeyword, bid.price);
     } else if(bid.discount) {
@@ -63,7 +64,7 @@ test.serial('trigger liquidation', async t => {
 
   const oraclesConfig = startedBy === gov1Addr ? config.oracles.reverse() : config.oracles;
 
-  await pushPrice(t, Liquiation.setup.price.trigger, oraclesConfig);
+  await pushPrice(t, Liquidation.setup.price.trigger, oraclesConfig);
 
   const { roundId: roundIdAfter } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
 
@@ -76,11 +77,15 @@ test.serial('start auction', async t => {
   t.pass();
 });
 
-test.serial('make sure bid are settled', async t => {
+test.serial('make sure all bids are settled', async t => {
   const { advanceAuctionStep } = await makeAuctionTimerDriver(t, 'user1');
   // We expect all bids to settle after 5 clock steps
   for (let i = 0; i < 5; i++) {
     await advanceAuctionStep();
   }
   t.pass();
+});
+
+test.serial('assert visibility', async t => {
+  await assertVisibility(t, 2);
 });
