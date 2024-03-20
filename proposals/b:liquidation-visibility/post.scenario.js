@@ -9,19 +9,22 @@ import {
 import { getContractInfo } from "@agoric/synthetic-chain";
 import { Liquidation} from "./spec.test.js";
 
+const config = {
+  swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
+  installer: 'user1',
+  oracles: [
+    { address: 'gov1', acceptId: 'gov1-accept-invite'},
+    { address: 'gov2', acceptId: 'gov2-accept-invite'},
+  ]
+};
+
 test.before(async t => {
-  t.context = await makeTestContext(
-    {
-      testConfig: {
-        swingstorePath: '~/.agoric/data/agoric/swingstore.sqlite',
-        installer: 'user1',
-        oracles: [
-          { address: 'gov1', acceptId: 'gov1-accept-invite'},
-          { address: 'gov2', acceptId: 'gov2-accept-invite'},
-        ]
-      }
-    }
-  );
+  const context = await makeTestContext({ testConfig: config });
+  const auctionTimerDriver = await makeAuctionTimerDriver(context, 'user1');
+  t.context = {
+    ...context,
+    auctionTimerDriver,
+  };
 });
 
 test.serial('open vaults', async t => {
@@ -72,20 +75,24 @@ test.serial('trigger liquidation', async t => {
 });
 
 test.serial('start auction', async t => {
-  const { startAuction } = await makeAuctionTimerDriver(t, 'user1');
-  await startAuction();
+  const { startAuction } = t.context.auctionTimerDriver;
+  config.currentAuction = await startAuction();
   t.pass();
 });
 
 test.serial('make sure all bids are settled', async t => {
-  const { advanceAuctionStep } = await makeAuctionTimerDriver(t, 'user1');
-  // We expect all bids to settle after 5 clock steps
-  for (let i = 0; i < 5; i++) {
-    await advanceAuctionStep();
-  }
+  const { advanceAuctionStepMulti, advanceAuctionStepByOne } = t.context.auctionTimerDriver;
+  await advanceAuctionStepByOne();
+  await advanceAuctionStepMulti(5);
+  t.pass();
+});
+
+test.serial('finish the current auction', async t => {
+  const { startAuction } = t.context.auctionTimerDriver;
+  await startAuction();
   t.pass();
 });
 
 test.serial('assert visibility', async t => {
-  await assertVisibility(t, 2);
+  await assertVisibility(t, 2, 0, config.currentAuction);
 });
