@@ -29,7 +29,7 @@ import pathAmbient from "path";
 import { tmpName as tmpNameAmbient } from "tmp";
 import { Liquidation } from "./spec.test.js";
 
-const AdvanceTimeOfferSpec = ({ id, timestamp }) => ({
+const AdvanceTimeExactOfferSpec = ({ id, timestamp }) => ({
   id,
   invitationSpec: {
     source: "agoricContract",
@@ -38,6 +38,17 @@ const AdvanceTimeOfferSpec = ({ id, timestamp }) => ({
   },
   proposal: {},
   offerArgs: { timestamp },
+});
+
+const AdvanceTimeStepByStepOfferSpec = ({ id, steps, duration }) => ({
+  id,
+  invitationSpec: {
+    source: "agoricContract",
+    instancePath: ['manualTimerInstance'],
+    callPipe: [["makeAdvanceTimeStepByStepInvitation"]],
+  },
+  proposal: {},
+  offerArgs: { duration },
 });
 
 export const makeTestContext = async ({ io = {}, testConfig, srcDir }) => {
@@ -192,21 +203,17 @@ export const pushPrice = async (t, price, oracles) => {
     ]
   };
 
-  const offersPs = [];
   for (const { address, acceptId } of oracles) {
-    offersPs.push(
-      agopsOffer({
-         t,
-         agopsParams: buildAgopsArgs(acceptId),
-         txParams: buildOfferArgs(address),
-         src: tmpRW,
-         from: address
-        }
-      )
+    await agopsOffer({
+        t,
+        agopsParams: buildAgopsArgs(acceptId),
+        txParams: buildOfferArgs(address),
+        src: tmpRW,
+        from: address
+      }
     )
   }
 
-  await Promise.all(offersPs);
   await waitForBlock(5);
 };
 
@@ -287,8 +294,8 @@ export const makeStorageInfoGetter = io => {
   return { getStorageInfo, marshaller };
 }
 
-export const makeAuctionTimerDriver = async (t, from) => {
-  const { mkTempRW, agoric } = t.context;
+export const makeAuctionTimerDriver = async (context, from) => {
+  const { mkTempRW, agoric } = context;
   const id = `manual-timer-${Date.now()}`;
   const tmpRW = await mkTempRW(id);
 
@@ -299,32 +306,58 @@ export const makeAuctionTimerDriver = async (t, from) => {
     const { nextStartTime, nominalStart } = await calculateNominalStart({ agoric });
 
     // First move the timer to nominalStart
-    await sendTimerOffer(from, nominalStart, marshaller, tmpRW, id);
+    await sendTimerOffer(from, marshaller, tmpRW, 'exact', { timestamp: nominalStart });
 
     // Now start the auction
-    await sendTimerOffer(from, nextStartTime, marshaller, tmpRW, id);
+    await sendTimerOffer(from, marshaller, tmpRW, 'exact', { timestamp: nextStartTime});
 
     return { nextStartTime, nominalStart };
   };
 
-  const advanceAuctionStep = async () => {
+  const advanceAuctionStepByOne = async () => {
     const schedule = await getStorageInfo('published.fakeAuctioneer.schedule');
 
     const { nextDescendingStepTime } = schedule;
-    t.log(schedule);
+    console.log(schedule);
 
     // Now start the auction
-    await sendTimerOffer(from, nextDescendingStepTime.absValue, marshaller, tmpRW, id);
+    await sendTimerOffer(from, marshaller, tmpRW, 'exact', { timestamp: nextDescendingStepTime.absValue });
   };
 
+  /**
+   *
+   * @param {BigInt} steps
+   * @return {Promise<void>}
+   */
+  const advanceAuctionStepMulti = async steps => {
+    const governance = await getStorageInfo('published.fakeAuctioneer.governance');
+
+    const { ClockStep: {
+      value: { relValue: clockStepVal }
+    } } = governance.current;
+
+    let currentStep = 0;
+    while(currentStep < steps) {
+      await sendTimerOffer(from, marshaller, tmpRW, 'step', { duration: clockStepVal });
+      currentStep += 1;
+    }
+  }
+
   return {
-    advanceAuctionStep,
+    advanceAuctionStepByOne,
+    advanceAuctionStepMulti,
     startAuction,
   };
 }
 
-export const sendTimerOffer = async (from, timeTo, marshaller, fileSrc, id) => {
-  const offerSpec = AdvanceTimeOfferSpec({ id: `${id}-${timeTo}`, timestamp: timeTo });
+export const sendTimerOffer = async (from, marshaller, fileSrc, type, offerArgs) => {
+  let offerSpec;
+  if (type === 'exact') {
+    offerSpec = AdvanceTimeExactOfferSpec({ id: `${Date.now()}`, ...offerArgs });
+  } else if(type === 'step') {
+    offerSpec = AdvanceTimeStepByStepOfferSpec({ id: `${Date.now()}`, ...offerArgs });
+  }
+
   const spendAction = {
     method: "executeOffer",
     offer: offerSpec,
@@ -423,8 +456,8 @@ export const bidByDiscount = (address, spend, colKeyword, discount) => {
  */
 const calculateNominalStart = async ({ agoric }) => {
   const [schedule, governance] = await Promise.all([
-    getContractInfo('published.fakeAuctioneer.schedule', { agoric }),
-    getContractInfo('published.fakeAuctioneer.governance', { agoric }),
+    getContractInfo('fakeAuctioneer.schedule', { agoric }),
+    getContractInfo('fakeAuctioneer.governance', { agoric }),
   ]);
 
   const { nextStartTime: { absValue: nextStartTimeVal } } = schedule;
@@ -439,7 +472,7 @@ const calculateNominalStart = async ({ agoric }) => {
 
 export const scale6 = x => BigInt(Math.round(x * 1_000_000));
 
-export const assertVisibility = async (t, managerIndex, base = 0, nominalStart) => {
+export const assertVisibility = async (t, managerIndex, base = 0, { nominalStart }) => {
   const { agoric } = t.context;
 
   const [preAuction, postAuction, auctionResult] = await Promise.all([
