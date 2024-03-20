@@ -1,4 +1,4 @@
-export const Liquiation = {
+export const Liquidation = {
   setup: {
     // Vaults are sorted in the worst debt/col ratio to the best
     vaults: [

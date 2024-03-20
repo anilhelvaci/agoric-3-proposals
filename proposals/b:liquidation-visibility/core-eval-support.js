@@ -3,31 +3,31 @@
 // or at least allow caller to supply authority.
 import '@endo/init';
 import {
+  agd,
+  agops,
+  agopsLocation,
   agoric,
+  dbTool,
+  executeCommand,
+  executeOffer,
+  getContractInfo,
+  makeAgd,
   makeFileRd,
   makeFileRW,
-  makeAgd,
-  dbTool,
   waitForBlock,
-  agops,
-  agd,
-  getContractInfo,
-  executeOffer,
-  agopsLocation,
-  executeCommand,
 } from '@agoric/synthetic-chain';
 import {
   boardValToSlot,
   slotToBoardRemote
 } from "@agoric/vats/tools/board-utils.js";
-import { Far, makeMarshal } from "@endo/marshal";
+import { makeMarshal } from "@endo/marshal";
 import processAmbient from "process";
 import cpAmbient from "child_process";
 import dbOpenAmbient from "better-sqlite3";
 import fspAmbient from "fs/promises";
 import pathAmbient from "path";
 import { tmpName as tmpNameAmbient } from "tmp";
-import { TimeMath } from "@agoric/time";
+import { Liquidation } from "./spec.test.js";
 
 const AdvanceTimeOfferSpec = ({ id, timestamp }) => ({
   id,
@@ -296,13 +296,15 @@ export const makeAuctionTimerDriver = async (t, from) => {
 
 
   const startAuction = async () => {
-    const schedule = await getStorageInfo('published.fakeAuctioneer.schedule');
+    const { nextStartTime, nominalStart } = await calculateNominalStart({ agoric });
 
-    const { nextStartTime } = schedule;
-    t.log(schedule);
+    // First move the timer to nominalStart
+    await sendTimerOffer(from, nominalStart, marshaller, tmpRW, id);
 
     // Now start the auction
-    await sendTimerOffer(from, nextStartTime.absValue, marshaller, tmpRW, id);
+    await sendTimerOffer(from, nextStartTime, marshaller, tmpRW, id);
+
+    return { nextStartTime, nominalStart };
   };
 
   const advanceAuctionStep = async () => {
@@ -315,31 +317,9 @@ export const makeAuctionTimerDriver = async (t, from) => {
     await sendTimerOffer(from, nextDescendingStepTime.absValue, marshaller, tmpRW, id);
   };
 
-  /**
-   * priceLockWakeTime = nominalStart - priceLockPeriod
-   */
-  const lockPrices = async () => {
-    const [schedule, governance] = await Promise.all([
-      getStorageInfo('published.fakeAuctioneer.schedule'),
-      getStorageInfo('published.fakeAuctioneer.governance'),
-    ]);
-
-    const { nextStartTime: { absValue: nextStartTimeVal } } = schedule;
-    const {
-      AuctionStartDelay: { value: { relValue: auctionStartDelay} },
-      PriceLockPeriod: { value: { relValue: priceLockPeriod } }
-    } = governance.current;
-
-    const nominalStartTime = nextStartTimeVal - auctionStartDelay;
-    const priceLockTime = nominalStartTime - priceLockPeriod;
-
-    await sendTimerOffer(from, priceLockTime, marshaller, tmpRW, id);
-  };
-
   return {
     advanceAuctionStep,
     startAuction,
-    lockPrices
   };
 }
 
@@ -430,4 +410,87 @@ export const bidByDiscount = (address, spend, colKeyword, discount) => {
       '--generate-only'
     ),
   );
+};
+
+/**
+ *
+ * priceLockWakeTime = nominalStart - priceLockPeriod
+ *
+ * @param {{
+ *   agoric: any
+ * }} io
+ * @return {Promise<{nominalStart: number, nextStartTime: number}>}
+ */
+const calculateNominalStart = async ({ agoric }) => {
+  const [schedule, governance] = await Promise.all([
+    getContractInfo('published.fakeAuctioneer.schedule', { agoric }),
+    getContractInfo('published.fakeAuctioneer.governance', { agoric }),
+  ]);
+
+  const { nextStartTime: { absValue: nextStartTimeVal } } = schedule;
+  const {
+    AuctionStartDelay: { value: { relValue: auctionStartDelay} },
+  } = governance.current;
+
+  const nominalStart = nextStartTimeVal - auctionStartDelay;
+
+  return { nominalStart, nextStartTime: nextStartTimeVal };
+};
+
+export const scale6 = x => BigInt(Math.round(x * 1_000_000));
+
+export const assertVisibility = async (t, managerIndex, base = 0, nominalStart) => {
+  const { agoric } = t.context;
+
+  const [preAuction, postAuction, auctionResult] = await Promise.all([
+    getContractInfo(`vaultFactory.managers.manager${managerIndex}.liquidations.${nominalStart}.vaults.preAuction`, { agoric }),
+    getContractInfo(`vaultFactory.managers.manager${managerIndex}.liquidations.${nominalStart}.vaults.postAuction`, { agoric }),
+    getContractInfo(`vaultFactory.managers.manager${managerIndex}.liquidations.${nominalStart}.auctionResult`, { agoric }),
+  ]);
+
+  const expectedPreAuction = [];
+  for (let i = 0; i < Liquidation.setup.vaults.length; i += 1) {
+    expectedPreAuction.push([
+      `vault${base + i}`,
+      {
+        collateralAmount: { value: scale6(Liquidation.setup.vaults[i].collateral) },
+        debtAmount: { value: scale6(Liquidation.setup.vaults[i].debt) },
+      },
+    ]);
+  }
+
+  t.like(
+    Object.fromEntries(preAuction),
+    Object.fromEntries(expectedPreAuction),
+  );
+
+  const expectedPostAuction = [];
+  // Iterate from the end because we expect the post auction vaults
+  // in best to worst order.
+  for (let i = Liquidation.outcome.vaults.length - 1; i >= 0; i -= 1) {
+    expectedPostAuction.push([
+      `vault${base + i}`,
+      { Collateral: { value: scale6(Liquidation.outcome.vaults[i].locked) } },
+    ]);
+  }
+  t.like(
+    Object.fromEntries(postAuction),
+    Object.fromEntries(expectedPostAuction),
+  );
+
+  t.like(auctionResult, {
+    collateralOffered: { value: scale6(Liquidation.setup.auction.start.collateral) },
+    istTarget: { value: scale6(Liquidation.setup.auction.start.debt) },
+    collateralForReserve: { value: scale6(Liquidation.outcome.reserve.allocations.ATOM) },
+    shortfallToReserve: { value: 0n },
+    mintedProceeds: { value: scale6(Liquidation.setup.auction.start.debt) },
+    collateralSold: {
+      value:
+        scale6(Liquidation.setup.auction.start.collateral) -
+        scale6(Liquidation.setup.auction.end.collateral),
+    },
+    collateralRemaining: { value: 0n },
+    // endTime: { absValue: endTime.absValue }, Figure out how to read the
+    // schedule
+  });
 };
