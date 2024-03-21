@@ -76,21 +76,6 @@ test.before(async t => (t.context = await makeTestContext({
   srcDir: 'testAssets'
 })));
 
-/**
- * Remove 'skip' to generate the assets that adds a new collateral to vault factory.
- * TODO: Add a read me on how to build the proposal
- */
-test.serial.skip('build-proposal', async t => {
-  const dstPath = '/usr/src/agoric-sdk/packages/inter-protocol/scripts/add-STARS.js';
-  if (!fs.existsSync(dstPath)) {
-    fs.copyFileSync('./testAssets/starsCollateral/add-STARS.js', dstPath);
-  }
-
-  await executeCommand('agoric run', [dstPath], { cwd: './testAssets/starsCollateral/'});
-
-  t.pass();
-});
-
 test.serial('make sure oracle addresses include gov1 and gov2', async t => {
   const { agd } = t.context;
   const starsOraclesRW = makeFileRW('testAssets/addStarsAsset/add-STARS-oracles.js', { fsp, path });
@@ -125,7 +110,7 @@ test.serial('make sure user1 will be funded with STARS', async t => {
 });
 
 test.serial('add STARS asset', async t => {
-  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/addStarsAsset';
+  const propDir = '/usr/src/proposals/b:liquidation-visibility/testAssets/addStarsAsset';
   const bundleInfos = await readBundles(propDir);
   await passCoreEvalProposal(
     bundleInfos,
@@ -136,7 +121,7 @@ test.serial('add STARS asset', async t => {
 });
 
 test.serial('fund user1 with STARS', async t => {
-  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/fundStars';
+  const propDir = '/usr/src/proposals/b:liquidation-visibility/testAssets/fundStars';
   const bundleInfos = await readBundles(propDir);
   await passCoreEvalProposal(
     bundleInfos,
@@ -147,7 +132,7 @@ test.serial('fund user1 with STARS', async t => {
 });
 
 test.serial('add STARS collateral', async t => {
-  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/addStarsCollateral';
+  const propDir = '/usr/src/proposals/b:liquidation-visibility/testAssets/addStarsCollateral';
   const bundleInfos = await readBundles(propDir);
   await passCoreEvalProposal(
     bundleInfos,
@@ -181,7 +166,3 @@ test.serial('push initial prices', async t => {
   const { roundId } = await getContractInfo('priceFeed.STARS-USD_price_feed.latestRound', { agoric });
   t.is(roundId, 1n);
 });
-
-test.todo('trigger liquidation');
-test.todo('run liquidation');
-test.todo('check visibility'); // How long the auction is going to take?

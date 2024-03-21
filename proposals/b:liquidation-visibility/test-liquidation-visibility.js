@@ -67,8 +67,8 @@ test.serial('fund user1 before the upgrade', async t => {
 
 test.serial('test', async t => {
 
-  const dir = '/usr/src/a3p/proposals/b:liquidation-visibility/assets';
-  const bundleInfos = await readBundles('/usr/src/a3p/proposals/b:liquidation-visibility/assets');
+  const dir = '/usr/src/proposals/b:liquidation-visibility/assets';
+  const bundleInfos = await readBundles('/usr/src/proposals/b:liquidation-visibility/assets');
 
   await passCoreEvalProposal(bundleInfos, { title: `Core eval of ${dir}`, ...staticConfig });
   t.pass();
