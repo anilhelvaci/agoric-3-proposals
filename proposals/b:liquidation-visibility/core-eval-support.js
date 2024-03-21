@@ -340,6 +340,7 @@ export const makeAuctionTimerDriver = async (context, from) => {
     while(currentStep < steps) {
       await sendTimerOffer(from, marshaller, tmpRW, 'step', { duration: clockStepVal });
       currentStep += 1;
+      await waitForBlock(5);
     }
   }
 
