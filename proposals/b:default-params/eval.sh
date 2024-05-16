@@ -8,4 +8,4 @@ source /usr/src/upgrade-test-scripts/env_setup.sh
 ls -al
 
 # XXX using Ava serial to script the core-eval
-yarn ava add-collateral.test.js
+yarn ava test-defaultParams.js
