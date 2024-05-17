@@ -89,7 +89,7 @@ test.serial('run prop', async t => {
   t.pass();
 });
 
-test.skip('display', async t => {
+test.serial('assert', async t => {
   const children = await getStorageChildren('published.vaultFactory.managers');
   t.log(children);
 
