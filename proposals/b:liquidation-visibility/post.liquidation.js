@@ -23,8 +23,8 @@ const config = {
   proposer: 'validator',
   featuresSrc: 'visibilityFeaturesProof.tar',
   release:
-    'https://github.com/Jorge-Lopes/agoric-sdk-liquidation-visibility/releases/tag/liq-visibility-a3p-v0.1',
-  originalBundle: 'b1-ccaf7d7db13a60ab9bcdc085240a4be8ee590486a763fb2e94dbc042000af7d5fdeb54edb8bc26febde291c2f777f8c39c47bbbad2b90bcc9da570b09cafec54.json'
+    'https://github.com/Jorge-Lopes/agoric-sdk/releases/tag/liq-visibility-a3p-v0.2',
+  originalBundle: 'b1-c5b68b69afc30ac95f4e40f79dab5bc45006000e9cb6bdeae037fb8f7ba711a8b147766a3691366c812ff748ffc90342d7d8d46aa0a8cb3bd21b323f9bb01c3e.json'
 };
 
 test.before(async t => {
@@ -89,9 +89,9 @@ test.serial('unarchive .tar and copy content under agoric-sdk', async t => {
   const interProtocolPath = '/usr/src/agoric-sdk/packages/inter-protocol';
   if (
     existsSync(
-      `${interProtocolPath}/src/proposals/vaultsLiquidationVisibility.js`,
+      `${interProtocolPath}/src/proposals/vaultsUpgrade.js`,
     ) &&
-    existsSync(`${interProtocolPath}/scripts/liquidation-visibility-upgrade.js`)
+    existsSync(`${interProtocolPath}/scripts/upgrade-vaults.js`)
   ) {
     t.pass();
     return;
