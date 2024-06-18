@@ -1,0 +1,17 @@
+{
+  "name": "upgrade-vaults-liq-visibility",
+  "script": "upgrade-vaults-liq-visibility.js",
+  "permit": "upgrade-vaults-liq-visibility-permit.json",
+  "bundles": [
+    {
+      "entrypoint": "../src/vaultFactory/vaultFactory.js",
+      "bundleID": "b1-c5b68b69afc30ac95f4e40f79dab5bc45006000e9cb6bdeae037fb8f7ba711a8b147766a3691366c812ff748ffc90342d7d8d46aa0a8cb3bd21b323f9bb01c3e",
+      "fileName": "/Users/anil/.agoric/cache/b1-c5b68b69afc30ac95f4e40f79dab5bc45006000e9cb6bdeae037fb8f7ba711a8b147766a3691366c812ff748ffc90342d7d8d46aa0a8cb3bd21b323f9bb01c3e.json"
+    },
+    {
+      "entrypoint": "../src/proposals/vaultsUpgrade.js",
+      "bundleID": "b1-88b8532be656b66ebc0298f916802fae523a263bd1935160ee0042cf0cb4136bdba57165a7ca70b78b37402404aaafc02400019383c6d6b076a7236a352a6ba3",
+      "fileName": "/Users/anil/.agoric/cache/b1-88b8532be656b66ebc0298f916802fae523a263bd1935160ee0042cf0cb4136bdba57165a7ca70b78b37402404aaafc02400019383c6d6b076a7236a352a6ba3.json"
+    }
+  ]
+}
