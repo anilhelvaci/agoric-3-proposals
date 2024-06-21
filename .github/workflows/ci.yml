@@ -72,7 +72,7 @@ jobs:
       contents: read
       # to push the resulting images
       packages: write
-    runs-on: 'depot-ubuntu-22.04-16'
+    runs-on: 'ubuntu-latest'
     steps:
       - name: free up disk space
         run: |
