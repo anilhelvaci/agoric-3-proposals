@@ -54,6 +54,7 @@ export const Liquidation = {
         STARS: 0.309852,
       },
       shortfall: 0,
+      minted: 0,
     },
     // The order in the setup preserved
     vaults: [
@@ -67,5 +68,9 @@ export const Liquidation = {
         locked: 3.425146,
       },
     ],
+    remaining: {
+      collateral: 0,
+    },
+    penalty: 0.30985,
   },
 };

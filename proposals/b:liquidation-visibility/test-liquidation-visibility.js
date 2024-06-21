@@ -29,8 +29,8 @@ const assetInfo = {
         { permit: 'upgrade-vaults-liq-visibility-permit.json', script: 'upgrade-vaults-liq-visibility.js' },
       ],
       bundles: [
-        'b1-7a5b067832fe1e968aca362ad713126737c3f0289dba7b527e0d23648b9419395c16399eed9358d5c555d29d2724561c12902dc2c960eca1bc4f0deee373a5c8.json',
-        'b1-ccaf7d7db13a60ab9bcdc085240a4be8ee590486a763fb2e94dbc042000af7d5fdeb54edb8bc26febde291c2f777f8c39c47bbbad2b90bcc9da570b09cafec54.json'
+        'b1-0daeb28abf2bb95cd27bebe80cdcd53ecd670244cb4ca6fe07784697fa8b40bcbc8f3ab1fd92a6d7ce8197efa0d2a28716737f77c68ab2eba88b3c72179f15e0.json',
+        'b1-88b8532be656b66ebc0298f916802fae523a263bd1935160ee0042cf0cb4136bdba57165a7ca70b78b37402404aaafc02400019383c6d6b076a7236a352a6ba3.json'
       ],
     },
   },
@@ -67,7 +67,7 @@ test.serial('fund user1 before the upgrade', async t => {
 
 test.serial('test', async t => {
 
-  const dir = '/usr/src/a3p/proposals/b:liquidation-visibility/assets';
+  const dir = '/usr/src/proposals/b:liquidation-visibility/assets';
   const bundleInfos = await readBundles(dir);
 
   await passCoreEvalProposal(bundleInfos, { title: `Core eval of ${dir}`, ...staticConfig });

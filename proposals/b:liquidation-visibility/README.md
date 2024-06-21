@@ -37,7 +37,7 @@ are actually reliable(we test what we will be deploying to the mainnet).
 
 ### Addressing problem #3
 In order to get around this problem we've created a tarball file ([visibilityFeaturesProof.tar](./visibilityFeaturesProof.tar))
-that has what we've developed and put the same file in both the [relase](https://github.com/Jorge-Lopes/agoric-sdk/releases/tag/liq-visibility-a3p-v0.2.tar). 
+that has what we've developed and put the same file in both the [relase](https://github.com/Jorge-Lopes/agoric-sdk/releases/tag/liq-visibility-a3p-v0.2). 
 Basically what we do with that file is;
 * Check the local and remote versions match using `cksum`
 * Move the incarnation 1 code to `/usr/src/agoric-sdk`

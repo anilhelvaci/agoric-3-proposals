@@ -110,7 +110,7 @@ test.serial('make sure user1 will be funded with STARS', async t => {
 });
 
 test.serial('add STARS asset', async t => {
-  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/addStarsAsset';
+  const propDir = '/usr/src/proposals/b:liquidation-visibility/testAssets/addStarsAsset';
   const bundleInfos = await readBundles(propDir);
   await passCoreEvalProposal(
     bundleInfos,
@@ -121,7 +121,7 @@ test.serial('add STARS asset', async t => {
 });
 
 test.serial('fund user1 with STARS', async t => {
-  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/fundStars';
+  const propDir = '/usr/src/proposals/b:liquidation-visibility/testAssets/fundStars';
   const bundleInfos = await readBundles(propDir);
   await passCoreEvalProposal(
     bundleInfos,
@@ -132,7 +132,7 @@ test.serial('fund user1 with STARS', async t => {
 });
 
 test.serial('add STARS collateral', async t => {
-  const propDir = '/usr/src/a3p/proposals/b:liquidation-visibility/testAssets/addStarsCollateral';
+  const propDir = '/usr/src/proposals/b:liquidation-visibility/testAssets/addStarsCollateral';
   const bundleInfos = await readBundles(propDir);
   await passCoreEvalProposal(
     bundleInfos,

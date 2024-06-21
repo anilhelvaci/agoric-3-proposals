@@ -5,7 +5,7 @@ const manifestBundleRef = {bundleID:"b1-beec8763eb9738cbd6a4c47f3948bf40a17269ae
 const getManifestCall = harden([
   "getFundStarsManifest",
   {
-    fundAccounts: ["agoric1p2aqakv3ulz4qfy2nut86j9gx0dx0yw09h96md"],
+    fundAccounts: ["agoric1rwwley550k9mmk6uq6mm6z4udrg8kyuyvfszjk"],
   },
 ]);
 const overrideManifest = {

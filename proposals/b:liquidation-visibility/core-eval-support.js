@@ -523,8 +523,13 @@ export const assertVisibility = async (t, managerIndex, base = 0, { nominalStart
         scale6(Liquidation.setup.auction.start.collateral) -
         scale6(Liquidation.setup.auction.end.collateral),
     },
-    collateralRemaining: { value: 0n },
     // endTime: { absValue: endTime.absValue }, Figure out how to read the
     // schedule
+    collateralRemaining: { value: scale6(Liquidation.outcome.remaining.collateral) },
+    debtToBurn: { value: scale6(Liquidation.setup.auction.start.debt) },
+    mintedForReserve: { value: scale6(Liquidation.outcome.reserve.minted) },
+    totalPenalty: { value: scale6(Liquidation.outcome.penalty) },
+    // startTime: { absValue: startTime.absValue },
+    // endTime: { absValue: endTime.absValue },
   });
 };

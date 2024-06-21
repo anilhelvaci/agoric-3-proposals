@@ -1,5 +1,5 @@
 sdkRoot=/usr/src/agoric-sdk
-proposalRoot=/usr/src/a3p/proposals/b:liquidation-visibility
+proposalRoot=/usr/src/proposals/b:liquidation-visibility
 
 echo "SDK Root" $sdkRoot
 echo "Proposal Root" $proposalRoot
