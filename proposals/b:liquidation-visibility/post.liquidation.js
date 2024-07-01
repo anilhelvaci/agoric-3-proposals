@@ -105,7 +105,6 @@ test.serial('unarchive .tar and copy content under agoric-sdk', async t => {
 test.serial('make sure bundle hashes match', async t => {
   // Rebuild bundles after copy
   console.log('Building bundles...');
-  console.log('Signature test');
   await executeCommand('yarn', ['build:bundles'], {
     cwd: '/usr/src/agoric-sdk/packages/inter-protocol',
   });
