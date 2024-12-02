@@ -20,10 +20,12 @@ export type SoftwareUpgradePackage = ProposalCommon & {
    */
   releaseNotes: string | false;
   type: 'Software Upgrade Proposal';
+  status?: string,
 };
 
 export type CoreEvalPackage = ProposalCommon & {
   type: '/agoric.swingset.CoreEvalProposal';
+  status?: string
 } & (
     | { source: 'build'; buildScript: string }
     | {
@@ -34,6 +36,7 @@ export type CoreEvalPackage = ProposalCommon & {
 
 export type ParameterChangePackage = ProposalCommon & {
   type: '/cosmos.params.v1beta1.ParameterChangeProposal';
+  status?: string
 };
 
 export type ProposalInfo =

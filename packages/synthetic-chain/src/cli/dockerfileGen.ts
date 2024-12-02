@@ -10,6 +10,13 @@ import {
   type SoftwareUpgradePackage,
 } from './proposals.js';
 
+const insertDevelopmentLibraries = stage => {
+  if(stage && stage === 'development') {
+    return `COPY --link --chmod=755 ./test-lib /usr/src/test-lib`
+  }
+  return '';
+}
+
 /**
  * Templates for Dockerfile stages
  */
@@ -58,10 +65,12 @@ FROM ghcr.io/agoric/agoric-3-proposals:${fromTag} as use-${fromTag}
       proposalName,
       upgradeInfo,
       releaseNotes,
+      status
     }: SoftwareUpgradePackage,
     lastProposal: ProposalInfo,
   ) {
     const skipProposalValidation = !releaseNotes;
+    const developmentLibs = insertDevelopmentLibraries(status);
     return `
 # PREPARE ${proposalName}
 
@@ -73,6 +82,7 @@ ENV \
     SKIP_PROPOSAL_VALIDATION=${skipProposalValidation}
 
 COPY --link --chmod=755 ./proposals/${path} /usr/src/proposals/${path}
+${developmentLibs}
 COPY --link --chmod=755 ./upgrade-test-scripts/env_setup.sh ./upgrade-test-scripts/run_prepare.sh ./upgrade-test-scripts/start_to_to.sh /usr/src/upgrade-test-scripts/
 WORKDIR /usr/src/upgrade-test-scripts
 SHELL ["/bin/bash", "-c"]
@@ -89,7 +99,9 @@ RUN ./run_prepare.sh ${path}
     planName,
     proposalName,
     sdkImageTag,
+    status
   }: SoftwareUpgradePackage) {
+    const developmentLibs = insertDevelopmentLibraries(status);
     return `
 # EXECUTE ${proposalName}
 FROM ghcr.io/agoric/agoric-sdk:${sdkImageTag} as execute-${proposalName}
@@ -98,6 +110,7 @@ WORKDIR /usr/src/upgrade-test-scripts
 
 # base is a fresh sdk image so set up the proposal and its dependencies
 COPY --link --chmod=755 ./proposals/${path} /usr/src/proposals/${path}
+${developmentLibs}
 COPY --link --chmod=755 ./upgrade-test-scripts/env_setup.sh ./upgrade-test-scripts/run_execute.sh  ./upgrade-test-scripts/start_to_to.sh ./upgrade-test-scripts/install_deps.sh /usr/src/upgrade-test-scripts/
 RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${path}
 
@@ -112,9 +125,10 @@ RUN ./run_execute.sh ${planName}
    * - Run the core-eval scripts from the proposal. They are only guaranteed to have started, not completed.
    */
   EVAL(
-    { path, proposalName }: CoreEvalPackage | ParameterChangePackage,
+    { path, proposalName, status }: CoreEvalPackage | ParameterChangePackage,
     lastProposal: ProposalInfo,
   ) {
+    const developmentLibs = insertDevelopmentLibraries(status);
     return `
 # EVAL ${proposalName}
 FROM use-${lastProposal.proposalName} as eval-${proposalName}
@@ -125,6 +139,7 @@ WORKDIR /usr/src/upgrade-test-scripts
 
 # First stage of this proposal so install its deps.
 COPY --link ./upgrade-test-scripts/install_deps.sh /usr/src/upgrade-test-scripts/
+${developmentLibs}
 RUN --mount=type=cache,target=/root/.yarn ./install_deps.sh ${path}
 
 COPY --link --chmod=755 ./upgrade-test-scripts/*eval* /usr/src/upgrade-test-scripts/
@@ -137,9 +152,10 @@ RUN ./run_eval.sh ${path}
    *
    * - Perform any mutations that should be part of chain history
    */
-  USE({ path, proposalName, type }: ProposalInfo) {
+  USE({ path, proposalName, type, status }: ProposalInfo) {
     const previousStage =
       type === 'Software Upgrade Proposal' ? 'execute' : 'eval';
+    const developmentLibs = insertDevelopmentLibraries(status);  
     return `
 # USE ${proposalName}
 FROM ${previousStage}-${proposalName} as use-${proposalName}
@@ -147,6 +163,7 @@ FROM ${previousStage}-${proposalName} as use-${proposalName}
 WORKDIR /usr/src/upgrade-test-scripts
 
 COPY --link --chmod=755 ./upgrade-test-scripts/run_use.sh ./upgrade-test-scripts/start_agd.sh /usr/src/upgrade-test-scripts/
+${developmentLibs}
 SHELL ["/bin/bash", "-c"]
 RUN ./run_use.sh ${path}
 ENTRYPOINT ./start_agd.sh
@@ -160,7 +177,8 @@ ENTRYPOINT ./start_agd.sh
    *
    * Needs to be an image to have access to the SwingSet db. run it with `docker run --rm` to not make the container ephemeral.
    */
-  TEST({ path, proposalName }: ProposalInfo) {
+  TEST({ path, proposalName, status }: ProposalInfo) {
+    const developmentLibs = insertDevelopmentLibraries(status);  
     return `
 # TEST ${proposalName}
 FROM use-${proposalName} as test-${proposalName}
@@ -168,6 +186,7 @@ FROM use-${proposalName} as test-${proposalName}
 WORKDIR /usr/src/upgrade-test-scripts
 
 COPY --link --chmod=755 ./upgrade-test-scripts/run_test.sh /usr/src/upgrade-test-scripts/
+${developmentLibs}
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ./run_test.sh ${path}
 `;
